@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "github.com/flavono123/l3l/proto;api";
+
+service LabelService {
+  rpc SearchLabels (SearchRequest) returns (stream MetaLabelResponse);
+}
+
+message ResourceRequest {
+}
+
+message SearchRequest {
+  string group = 1;
+  string version = 2;
+  string resource = 3;
+  string namespace = 4;
+  string keyword = 5;
+}
+
+message MetaLabelResponse {
+  string name = 1;
+  string namespace = 2;
+  map<string, string> labels = 3;
+}

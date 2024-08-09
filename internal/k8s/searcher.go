@@ -28,16 +28,20 @@ type Searcher struct {
 	resourceCache map[string]PartialObjectMeta // Name, Namespace, Labels만 쓰인다
 	cacheMutex    sync.Mutex
 	watchOnce     sync.Once
+	hasSynced     bool
+	syncCond      *sync.Cond
 }
 
 // constructor
 func NewSearcher(client dynamic.Interface, gvr schema.GroupVersionResource, namespace string) *Searcher {
-	return &Searcher{
+	searcher := &Searcher{
 		client:        client,
 		gvr:           gvr,
 		namespace:     namespace,
 		resourceCache: make(map[string]PartialObjectMeta),
 	}
+	searcher.syncCond = sync.NewCond(&searcher.cacheMutex)
+	return searcher
 }
 
 // methods
@@ -45,6 +49,11 @@ func NewSearcher(client dynamic.Interface, gvr schema.GroupVersionResource, name
 func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error {
 	s.cacheMutex.Lock()
 	defer s.cacheMutex.Unlock()
+
+	// Wait until cache is synced
+	for !s.hasSynced {
+		s.syncCond.Wait()
+	}
 
 	// filter by label key or value match with keyword from cache
 	for _, meta := range s.resourceCache {
@@ -91,7 +100,6 @@ func (s *Searcher) watchResources(ctx context.Context) error {
 				resource := obj.(*unstructured.Unstructured)
 				key := cacheKey(resource)
 				s.resourceCache[key] = toPartialObjectMeta(resource)
-				// fmt.Printf("%s added\n", key)
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				s.cacheMutex.Lock()
@@ -99,7 +107,6 @@ func (s *Searcher) watchResources(ctx context.Context) error {
 				resource := newObj.(*unstructured.Unstructured)
 				key := cacheKey(resource)
 				s.resourceCache[key] = toPartialObjectMeta(resource)
-				// fmt.Printf("%s updated\n", key)
 			},
 			DeleteFunc: func(obj interface{}) {
 				s.cacheMutex.Lock()
@@ -107,13 +114,24 @@ func (s *Searcher) watchResources(ctx context.Context) error {
 				resource := obj.(*unstructured.Unstructured)
 				key := cacheKey(resource)
 				delete(s.resourceCache, key)
-				// fmt.Printf("%s deleted\n", key)
 			},
 		},
 	)
 
 	stop := make(chan struct{})
 	go controller.Run(stop)
+
+	// Wait for cache sync
+	if !cache.WaitForCacheSync(stop, controller.HasSynced) {
+		close(stop)
+		return fmt.Errorf("failed to sync cache")
+	}
+
+	// Notify that cache has synced
+	s.cacheMutex.Lock()
+	s.hasSynced = true
+	s.syncCond.Broadcast()
+	s.cacheMutex.Unlock()
 
 	<-ctx.Done()
 	close(stop)

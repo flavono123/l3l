@@ -1,8 +1,8 @@
 {
   "group": "",
   "version": "v1",
-  "resource": "pods",
+  "resource": "nodes",
   "namespace": "",
-  "keyword": "pubg"
+  "keyword": "node"
 }
 

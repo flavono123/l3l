@@ -25,14 +25,14 @@ func main() {
 	gvr := schema.GroupVersionResource{
 		Group:    "",
 		Version:  "v1",
-		Resource: "pods",
+		Resource: "nodes",
 	}
 
 	// Searcher 초기화
 	searcher := k8s.NewSearcher(client, gvr, "")
 
 	// 검색할 키워드 설정
-	keyword := "pubg" // 예시로 "app" 키워드를 사용
+	keyword := "node" // 예시로 "app" 키워드를 사용
 
 	// 검색 결과를 받을 스트림 채널 생성
 	stream := make(chan k8s.PartialObjectMeta)
@@ -51,13 +51,11 @@ func main() {
 	}()
 
 	// 리소스 감시 시작
-	go func() {
-		err = searcher.Watch(ctx)
-		if err != nil {
-			fmt.Printf("Error watching resources: %v\n", err)
-			return
-		}
-	}()
+	err = searcher.Watch(ctx)
+	if err != nil {
+		fmt.Printf("Error watching resources: %v\n", err)
+		return
+	}
 
 	// 검색 실행
 	go func() {

@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/flavono123/l3l/internal/k8s"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"github.com/rs/cors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -18,7 +20,6 @@ import (
 )
 
 // server는 pb.LabelServiceServer 인터페이스를 구현합니다.
-
 type server struct {
 	pb.UnimplementedLabelServiceServer
 	searchers map[string]*k8s.Searcher
@@ -100,19 +101,33 @@ func getClient() (dynamic.Interface, error) {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	s := grpc.NewServer()
-	pb.RegisterLabelServiceServer(s, NewServer())
+	grpcServer := grpc.NewServer()
+	pb.RegisterLabelServiceServer(grpcServer, NewServer())
 
 	// Reflection API 활성화
-	reflection.Register(s)
+	reflection.Register(grpcServer)
 
-	log.Println("gRPC server listening on port 50051")
-	if err := s.Serve(listener); err != nil {
+	wrappedGrpc := grpcweb.WrapServer(grpcServer)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"}, // 필요한 클라이언트 도메인 추가
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		ExposedHeaders:   []string{"Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding"},
+		AllowCredentials: true,
+		Debug:            true,
+	})
+
+	handler := c.Handler(http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		if wrappedGrpc.IsGrpcWebRequest(req) || wrappedGrpc.IsGrpcWebSocketRequest(req) || wrappedGrpc.IsAcceptableGrpcCorsRequest(req) {
+			wrappedGrpc.ServeHTTP(resp, req)
+		} else {
+			http.DefaultServeMux.ServeHTTP(resp, req)
+		}
+	}))
+
+	port := ":50051"
+	log.Printf("gRPC server listening on port %s", port)
+	if err := http.ListenAndServe(port, handler); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }

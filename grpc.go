@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/clientcmd"
 
-	pb "github.com/flavono123/l3l/proto"
+	pb "github.com/flavono123/l3l/api/pb"
 )
 
 // server는 pb.LabelServiceServer 인터페이스를 구현합니다.

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api;
 
-option go_package = "github.com/flavono123/l3l/proto;api";
+option go_package = "github.com/flavono123/l3l/api/pb;api";
 
 service LabelService {
   rpc SearchLabels (SearchRequest) returns (stream MetaLabelResponse);

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.27.3
-// source: proto/api.proto
+// source: label_service.proto
 
 package api
 
@@ -120,5 +120,5 @@ var LabelService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "proto/api.proto",
+	Metadata: "label_service.proto",
 }

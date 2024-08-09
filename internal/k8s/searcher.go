@@ -26,10 +26,10 @@ type Searcher struct {
 	gvr       schema.GroupVersionResource
 	namespace string
 	// cache
-	resourceCache map[string]PartialObjectMeta // Name, Namespace, Labels만 쓰인다
-	cacheMutex    sync.Mutex
-	hasSynced     bool
-	syncCond      *sync.Cond
+	resourceCache  map[string]PartialObjectMeta // Name, Namespace, Labels만 쓰인다
+	cacheMutex     sync.Mutex
+	cacheHasSynced bool
+	cacheSyncCond  *sync.Cond
 	// watch context
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -46,7 +46,7 @@ func NewSearcher(client dynamic.Interface, gvr schema.GroupVersionResource, name
 		ctx:           ctx,
 		cancel:        cancel,
 	}
-	searcher.syncCond = sync.NewCond(&searcher.cacheMutex)
+	searcher.cacheSyncCond = sync.NewCond(&searcher.cacheMutex)
 	return searcher
 }
 
@@ -56,10 +56,7 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 	s.cacheMutex.Lock()
 	defer s.cacheMutex.Unlock()
 
-	// Wait until cache is synced
-	for !s.hasSynced {
-		s.syncCond.Wait()
-	}
+	s.waitUntilCacheSynced()
 
 	// filter by label key or value match with keyword from cache
 	for _, meta := range s.resourceCache {
@@ -136,14 +133,25 @@ func (s *Searcher) watchResources(ctx context.Context) error {
 	}
 
 	// Notify that cache has synced
-	s.cacheMutex.Lock()
-	s.hasSynced = true
-	s.syncCond.Broadcast()
-	s.cacheMutex.Unlock()
+	s.notifyCacheSynced()
 
 	<-ctx.Done()
 	close(stop)
 	return ctx.Err()
+}
+
+func (s *Searcher) waitUntilCacheSynced() {
+	for !s.cacheHasSynced {
+		s.cacheSyncCond.Wait()
+	}
+}
+
+func (s *Searcher) notifyCacheSynced() {
+	// HACK: cacheMutex is for resourceCache is it proper for this?
+	s.cacheMutex.Lock()
+	s.cacheHasSynced = true
+	s.cacheSyncCond.Broadcast()
+	s.cacheMutex.Unlock()
 }
 
 // helpers

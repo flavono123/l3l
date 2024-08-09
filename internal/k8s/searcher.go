@@ -28,7 +28,6 @@ type Searcher struct {
 	// cache
 	resourceCache map[string]PartialObjectMeta // Name, Namespace, Labels만 쓰인다
 	cacheMutex    sync.Mutex
-	watchOnce     sync.Once
 	hasSynced     bool
 	syncCond      *sync.Cond
 	// watch context
@@ -75,14 +74,12 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 	return nil
 }
 
-func (s *Searcher) Watch() error {
-	var err error
-	s.watchOnce.Do(func() {
-		go func() {
-			err = s.watchResources(s.ctx)
-		}()
-	})
-	return err
+func (s *Searcher) Watch() {
+	go func() {
+		if err := s.watchResources(s.ctx); err != nil {
+			panic(err)
+		}
+	}()
 }
 
 func (s *Searcher) Stop() {

@@ -56,9 +56,7 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 		)
 
 		log.Printf("Watching resources for key: %s\n", key)
-		if err := searcher.Watch(); err != nil {
-			panic(err)
-		}
+		searcher.Watch()
 
 		s.searchers[key] = searcher
 	}

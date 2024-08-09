@@ -22,23 +22,30 @@ type PartialObjectMeta struct {
 }
 
 type Searcher struct {
-	client        dynamic.Interface
-	gvr           schema.GroupVersionResource
-	namespace     string
+	client    dynamic.Interface
+	gvr       schema.GroupVersionResource
+	namespace string
+	// cache
 	resourceCache map[string]PartialObjectMeta // Name, Namespace, Labels만 쓰인다
 	cacheMutex    sync.Mutex
 	watchOnce     sync.Once
 	hasSynced     bool
 	syncCond      *sync.Cond
+	// watch context
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // constructor
 func NewSearcher(client dynamic.Interface, gvr schema.GroupVersionResource, namespace string) *Searcher {
+	ctx, cancel := context.WithCancel(context.Background())
 	searcher := &Searcher{
 		client:        client,
 		gvr:           gvr,
 		namespace:     namespace,
 		resourceCache: make(map[string]PartialObjectMeta),
+		ctx:           ctx,
+		cancel:        cancel,
 	}
 	searcher.syncCond = sync.NewCond(&searcher.cacheMutex)
 	return searcher
@@ -68,14 +75,18 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 	return nil
 }
 
-func (s *Searcher) Watch(ctx context.Context) error {
+func (s *Searcher) Watch() error {
 	var err error
 	s.watchOnce.Do(func() {
 		go func() {
-			err = s.watchResources(ctx)
+			err = s.watchResources(s.ctx)
 		}()
 	})
 	return err
+}
+
+func (s *Searcher) Stop() {
+	s.cancel()
 }
 
 // private

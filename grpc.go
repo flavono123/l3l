@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/flavono123/l3l/internal/k8s"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -56,15 +55,10 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 			req.Namespace,
 		)
 
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		go func() {
-			log.Printf("Watching resources for key: %s\n", key)
-			if err := searcher.Watch(ctx); err != nil {
-				panic(err)
-			}
-		}()
+		log.Printf("Watching resources for key: %s\n", key)
+		if err := searcher.Watch(); err != nil {
+			panic(err)
+		}
 
 		s.searchers[key] = searcher
 	}

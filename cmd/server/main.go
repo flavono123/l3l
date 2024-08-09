@@ -24,42 +24,15 @@ type server struct {
 	searchers map[string]*k8s.Searcher
 }
 
-// NewServer는 새로운 gRPC 서버를 생성합니다.
-
 func NewServer() *server {
 	return &server{
 		searchers: make(map[string]*k8s.Searcher),
 	}
 }
 
-// SearchLabels은 주어진 키워드로 리소스를 검색하고 스트림을 통해 결과를 반환합니다.
-
 func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_SearchLabelsServer) error {
 	log.Printf("Received SearchLabels request: %+v\n", req)
-	key := searcherKey(req.Group, req.Version, req.Resource, req.Namespace)
-	searcher, ok := s.searchers[key]
-	if !ok {
-		log.Printf("Creating new searcher for key: %s\n", key)
-		client, err := getClient()
-		if err != nil {
-			return err
-		}
-
-		searcher = k8s.NewSearcher(
-			client,
-			schema.GroupVersionResource{
-				Group:    req.Group,
-				Version:  req.Version,
-				Resource: req.Resource,
-			},
-			req.Namespace,
-		)
-
-		log.Printf("Watching resources for key: %s\n", key)
-		searcher.Watch()
-
-		s.searchers[key] = searcher
-	}
+	searcher := s.getSearcher(req)
 
 	results := make(chan k8s.PartialObjectMeta)
 	go func() {
@@ -83,6 +56,35 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 		}
 	}
 	return nil
+}
+
+func (s *server) getSearcher(req *pb.SearchRequest) *k8s.Searcher {
+	key := searcherKey(req.Group, req.Version, req.Resource, req.Namespace)
+	searcher, ok := s.searchers[key]
+	if !ok {
+		log.Printf("Creating new searcher for key: %s\n", key)
+		client, err := getClient()
+		if err != nil {
+			panic(err)
+		}
+
+		searcher = k8s.NewSearcher(
+			client,
+			schema.GroupVersionResource{
+				Group:    req.Group,
+				Version:  req.Version,
+				Resource: req.Resource,
+			},
+			req.Namespace,
+		)
+
+		log.Printf("Watching resources for key: %s\n", key)
+		searcher.Watch()
+
+		s.searchers[key] = searcher
+	}
+
+	return searcher
 }
 
 func searcherKey(group, version, resource, namespace string) string {

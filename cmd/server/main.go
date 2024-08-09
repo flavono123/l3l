@@ -36,7 +36,7 @@ func NewServer() *server {
 
 func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_SearchLabelsServer) error {
 	log.Printf("Received SearchLabels request: %+v\n", req)
-	key := cacheKey(req.Group, req.Version, req.Resource, req.Namespace)
+	key := searcherKey(req.Group, req.Version, req.Resource, req.Namespace)
 	searcher, ok := s.searchers[key]
 	if !ok {
 		log.Printf("Creating new searcher for key: %s\n", key)
@@ -85,7 +85,7 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 	return nil
 }
 
-func cacheKey(group, version, resource, namespace string) string {
+func searcherKey(group, version, resource, namespace string) string {
 	return fmt.Sprintf("%s:%s:%s:%s", group, version, resource, namespace)
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
-import { searchLabels } from "@/grpc/client";
+import { type MetaLabel, searchLabels } from "@/grpc/client";
+import { SearchRequest } from "@/grpc/label_service_pb";
 import { useState } from "react";
 import {
   Button,
@@ -10,14 +11,20 @@ import {
 } from "@cloudscape-design/components"
 
 export default function App() {
-  const [labels, setLabels] = useState([] as any[]);
+  const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
   const [loading, setLoading] = useState(true);
 
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const result = await searchLabels('', 'v1', 'nodes', '', 'node');
-      setLabels(result as any[]);
+      const result: MetaLabel[] = await searchLabels({
+        group: '',
+        version: 'v1',
+        resource: 'nodes',
+        namespace: '',
+        keyword: 'node'
+      } as SearchRequest.AsObject);
+      setMetaLabels(result);
     } catch (error) {
       console.error(error);
     }
@@ -30,14 +37,14 @@ export default function App() {
       <Table
         header={<Header>Labels</Header>}
         columnDefinitions={[
-          { id: 'name', header: 'Name', cell: (e: any) => e.name },
-          { id: 'namespace', header: 'Namespace', cell: (e: any) => e.namespace },
+          { id: 'name', header: 'Name', cell: (item: MetaLabel) => item.name },
+          { id: 'namespace', header: 'Namespace', cell: (item: MetaLabel) => item.namespace },
           {
             id: 'labels',
             header: 'Labels',
-            cell: (e: any) => (
+            cell: (item: MetaLabel) => (
               <ColumnLayout columns={1} variant="text-grid">
-                {Object.entries(e.labels).map(([key, value]) => (
+                {Object.entries(item.labels).map(([key, value]) => (
                   <div key={key}>
                     <strong>{key}</strong>: {value}
                   </div>
@@ -46,7 +53,7 @@ export default function App() {
             ),
           },
         ]}
-        items={labels}
+        items={metaLabels}
         loading={loading}
         empty={<div>No labels found</div>}
       />

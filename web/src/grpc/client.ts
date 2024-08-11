@@ -1,16 +1,22 @@
 import { LabelServiceClient } from './Label_serviceServiceClientPb';
-import { SearchRequest } from './label_service_pb';
+import { type MetaLabelResponse, SearchRequest } from './label_service_pb';
 
 const client = new LabelServiceClient('http://localhost:50051', null, null);
 
-type MetaLabel = {
+export type MetaLabel = {
   name: string;
   namespace: string;
   labels: { [key: string]: string };
 }
 
 
-export const searchLabels = async (group: string, version: string, resource: string, namespace: string, keyword: string) => {
+export async function searchLabels({
+  group,
+  version,
+  resource,
+  namespace,
+  keyword
+}: SearchRequest.AsObject): Promise<MetaLabel[]> {
   return new Promise((resolve, reject) => {
     const request = new SearchRequest();
     request.setGroup(group);
@@ -20,26 +26,25 @@ export const searchLabels = async (group: string, version: string, resource: str
     request.setKeyword(keyword);
 
     const stream = client.searchLabels(request, {});
-    const labels: MetaLabel[] = [];
+    const metaLabels: MetaLabel[] = [];
 
-    stream.on('data', (response) => {
-      const labelData = response.toObject();
-      const labelsMap = labelData.labelsMap || [];
-      const labelsObj: { [key: string]: string } = {};
-      labelsMap.forEach(([key, value]) => {
-        labelsObj[key] = value;
-      });
+    stream.on('data', (response: MetaLabelResponse) => {
+      const {
+        name,
+        namespace,
+        labelsMap
+      }: MetaLabelResponse.AsObject = response.toObject();
 
-      labels.push({
-        name: labelData.name,
-        namespace: labelData.namespace,
-        labels: labelsObj,
+      metaLabels.push({
+        name,
+        namespace,
+        labels: Object.fromEntries(labelsMap),
       });
     });
 
     stream.on('end', () => {
-      console.log("searchLabels response:", labels);
-      resolve(labels);
+      console.log("searchLabels response:", metaLabels);
+      resolve(metaLabels);
     });
 
     stream.on('error', (err) => {

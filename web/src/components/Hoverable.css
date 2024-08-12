@@ -1,0 +1,9 @@
+div[data-hover="true"] {
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+div[data-hover="false"] {
+  opacity: 0.25;
+  transition: opacity 0.2s;
+}

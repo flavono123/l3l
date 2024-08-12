@@ -65,16 +65,14 @@ export default function App() {
               text: "",
               href: "#",
               info: (
-                <div
-                  style={{
-                    opacity: hoverKey === key || hoverKey === null ? 1 : 0.2,
-                    transition: "opacity 0.2s",
-                  }}
-                  onMouseEnter={() => handleMouseEnter(key)}
-                  onMouseLeave={() => handleMouseLeave()}
+                <Hoverable
+                  keyName={key}
+                  hoverKey={hoverKey}
+                  handleMouseEnter={handleMouseEnter}
+                  handleMouseLeave={handleMouseLeave}
                 >
                   <Badge color={generateBadgeColor(key)}>{key}</Badge>
-                </div>
+                </Hoverable>
               ),
             }))}
           />
@@ -102,17 +100,14 @@ export default function App() {
                   cell: (item: MetaLabel) => (
                     <ColumnLayout columns={10} borders="horizontal">
                       {Object.entries(item.labels).map(([key, value]) => (
-                        <div
-                          style={{
-                            opacity:
-                              hoverKey === key || hoverKey === null ? 1 : 0.2,
-                            transition: "opacity 0.2s",
-                          }}
-                          onMouseEnter={() => handleMouseEnter(key)}
-                          onMouseLeave={() => handleMouseLeave()}
+                        <Hoverable
+                          keyName={key}
+                          hoverKey={hoverKey}
+                          handleMouseEnter={handleMouseEnter}
+                          handleMouseLeave={handleMouseLeave}
                         >
                           <Badge color={generateBadgeColor(key)}>{value}</Badge>
-                        </div>
+                        </Hoverable>
                       ))}
                     </ColumnLayout>
                   ),

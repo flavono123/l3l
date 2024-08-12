@@ -20,7 +20,7 @@ export default function HighlightedText({
         const end = index;
         lastIndex = index + 1;
         return (
-          <>
+          <Fragment key={text}>
             {text.slice(start, end)}
             <span
               key={i}
@@ -32,7 +32,7 @@ export default function HighlightedText({
             >
               {text[end]}
             </span>
-          </>
+          </Fragment>
         );
       })}
       {text.slice(lastIndex)}

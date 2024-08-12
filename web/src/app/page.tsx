@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import {
   AppLayout,
   Badge,
-  Button,
   ColumnLayout,
   Header,
   SideNavigation,
@@ -23,6 +22,9 @@ export default function App() {
   const [hoverKey, setHoverKey] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [keyword, setKeyword] = useState<string>("");
+  const [keyHighlight, setKeyHighlight] = useState<{ [key: string]: number[] }>(
+    {},
+  );
 
   useEffect(() => {
     const fetchLabels = async () => {
@@ -37,6 +39,7 @@ export default function App() {
         } as SearchRequest.AsObject);
         setMetaLabels(result);
         setLabelKeys(result.map((item) => Object.keys(item.labels)).flat());
+        setKeyHighlight(result[0]?.keyHighlights); // all metaLabels have the same keyHighlights
       } catch (error) {
         console.error(error);
       }
@@ -72,12 +75,18 @@ export default function App() {
               href: "#",
               info: (
                 <Hoverable
+                  key={key}
                   keyName={key}
                   hoverKey={hoverKey}
                   handleMouseEnter={handleMouseEnter}
                   handleMouseLeave={handleMouseLeave}
                 >
-                  <Badge color={generateBadgeColor(key)}>{key}</Badge>
+                  <Badge color={generateBadgeColor(key)}>
+                    <HighlightedText
+                      text={key}
+                      indices={keyHighlight[key] || []}
+                    />
+                  </Badge>
                 </Hoverable>
               ),
             }))}
@@ -113,6 +122,7 @@ export default function App() {
                     <ColumnLayout columns={10} borders="horizontal">
                       {Object.entries(item.labels).map(([key, value]) => (
                         <Hoverable
+                          key={key}
                           keyName={key}
                           hoverKey={hoverKey}
                           handleMouseEnter={handleMouseEnter}

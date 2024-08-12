@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,24 +75,14 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 			vMatches := fuzzy.Find(keyword, []string{v})
 
 			if len(kMatches) > 0 {
-				var indices []int32
-				for _, index := range kMatches[0].MatchedIndexes {
-					indices = append(indices, int32(index))
-				}
-
 				keyHighlights[k] = Highlight{
-					Indices: indices,
+					Indices: convertToPbIndices(kMatches[0]),
 				}
 			}
 
 			if len(vMatches) > 0 {
-				var indices []int32
-				for _, index := range vMatches[0].MatchedIndexes {
-					indices = append(indices, int32(index))
-				}
-
 				valueHighlights[k] = Highlight{
-					Indices: indices,
+					Indices: convertToPbIndices(vMatches[0]),
 				}
 			}
 		}
@@ -192,9 +181,12 @@ func (s *Searcher) notifyCacheSynced() {
 }
 
 // helpers
-func match(target string, keyword string) bool {
-	// TODO: fuzzy matching
-	return strings.Contains(target, keyword)
+func convertToPbIndices(match fuzzy.Match) []int32 {
+	var indices []int32
+	for _, index := range match.MatchedIndexes {
+		indices = append(indices, int32(index))
+	}
+	return indices
 }
 
 func cacheKey(resource *unstructured.Unstructured) string {

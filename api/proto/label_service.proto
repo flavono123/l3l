@@ -27,6 +27,6 @@ message MetaLabelResponse {
   string name = 1;
   string namespace = 2;
   map<string, string> labels = 3;
-  map<string, HighlightResponse> key_highlights = 4;
+  map<string, HighlightResponse> key_highlights = 4; // TODO: dedup in upper level
   map<string, HighlightResponse> value_highlights = 5;
 }

@@ -21,14 +21,14 @@ type Highlight struct {
 }
 
 type PartialObjectMeta struct {
-	Name            string
-	Namespace       string
 	Labels          map[string]string
 	KeyHighlights   map[string]Highlight
 	ValueHighlights map[string]Highlight
+	Name            string
+	Namespace       string
 }
 
-type Searcher struct {
+type Searcher struct { // TODO: optimize paddings
 	client    dynamic.Interface
 	gvr       schema.GroupVersionResource
 	namespace string

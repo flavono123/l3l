@@ -9,6 +9,7 @@ import {
   ColumnLayout,
   Header,
   SideNavigation,
+  SpaceBetween,
   Table,
   TextFilter,
 } from "@cloudscape-design/components";
@@ -67,6 +68,7 @@ export default function App() {
       <AppLayout
         navigationOpen={true}
         navigation={
+          // TODO: current items should be in a column layout
           <SideNavigation
             header={{ text: "Labels keys", href: "#" }}
             items={labelKeys.map((key) => ({
@@ -97,7 +99,14 @@ export default function App() {
         content={
           <>
             <Table
-              header={<Header>Labels</Header>}
+              header={
+                <Header
+                  counter={`${metaLabels.length}`}
+                  description="Label values"
+                >
+                  Resources
+                </Header>
+              }
               filter={
                 <TextFilter
                   filteringText={keyword}
@@ -121,26 +130,29 @@ export default function App() {
                   header: "Labels",
                   cell: (item: MetaLabel) => (
                     <ColumnLayout columns={10} borders="horizontal">
-                      {Object.entries(item.labels).map(([key, value]) => (
-                        <Hoverable
-                          key={`${item.namespace}/${item.name}-${key}`}
-                          keyName={key}
-                          hoverKey={hoverKey}
-                          handleMouseEnter={handleMouseEnter}
-                          handleMouseLeave={handleMouseLeave}
-                        >
-                          <Badge color={generateBadgeColor(key)}>
-                            <HighlightedText
-                              text={value}
-                              indices={item.valueHighlights[key] || []}
-                            />
-                          </Badge>
-                        </Hoverable>
-                      ))}
+                      <SpaceBetween direction="horizontal" size="xxs">
+                        {Object.entries(item.labels).map(([key, value]) => (
+                          <Hoverable
+                            key={`${item.namespace}/${item.name}-${key}`}
+                            keyName={key}
+                            hoverKey={hoverKey}
+                            handleMouseEnter={handleMouseEnter}
+                            handleMouseLeave={handleMouseLeave}
+                          >
+                            <Badge color={generateBadgeColor(key)}>
+                              <HighlightedText
+                                text={value}
+                                indices={item.valueHighlights[key] || []}
+                              />
+                            </Badge>
+                          </Hoverable>
+                        ))}
+                      </SpaceBetween>
                     </ColumnLayout>
                   ),
                 },
               ]}
+              contentDensity="compact"
               items={metaLabels}
               loading={loading}
               empty={<div>No labels found</div>}

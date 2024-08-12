@@ -1,7 +1,7 @@
 import { LabelServiceClient } from "./Label_serviceServiceClientPb";
 import {
   MetaLabelResponse,
-  Highlight,
+  HighlightResponse,
   SearchRequest,
 } from "./label_service_pb";
 
@@ -48,14 +48,14 @@ export async function searchLabels({
         labels: Object.fromEntries(labelsMap),
         keyHighlights: Object.fromEntries(
           Object.entries(keyHighlightsMap).map(
-            ([_, value]: [string, [string, Highlight.AsObject]]) => [
+            ([_, value]: [string, [string, HighlightResponse.AsObject]]) => [
               value[0],             // key of label
               value[1].indicesList, // indices of keyword in key
             ],
           ),
         ),
         valueHighlights: Object.fromEntries(
-          Object.entries(valueHighlightsMap).map(([_, value]: [string, [string, Highlight.AsObject]]) => [
+          Object.entries(valueHighlightsMap).map(([_, value]: [string, [string, HighlightResponse.AsObject]]) => [
             value[0],              // key of label
             value[1].indicesList,  // indices of keyword in value
           ]),

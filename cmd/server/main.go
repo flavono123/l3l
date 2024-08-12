@@ -102,10 +102,10 @@ func getClient() (dynamic.Interface, error) {
 	return dynamic.NewForConfig(config)
 }
 
-func convertToPbHighlightMap(highlights map[string]k8s.Highlights) map[string]*pb.Highlight {
-	result := make(map[string]*pb.Highlight)
+func convertToPbHighlightMap(highlights map[string]k8s.Highlight) map[string]*pb.HighlightResponse {
+	result := make(map[string]*pb.HighlightResponse)
 	for k, v := range highlights {
-		result[k] = &pb.Highlight{Indices: v.Indices}
+		result[k] = &pb.HighlightResponse{Indices: v.Indices}
 	}
 	return result
 }

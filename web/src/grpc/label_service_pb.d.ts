@@ -50,21 +50,21 @@ export namespace SearchRequest {
   }
 }
 
-export class Highlight extends jspb.Message {
+export class HighlightResponse extends jspb.Message {
   getIndicesList(): Array<number>;
-  setIndicesList(value: Array<number>): Highlight;
-  clearIndicesList(): Highlight;
-  addIndices(value: number, index?: number): Highlight;
+  setIndicesList(value: Array<number>): HighlightResponse;
+  clearIndicesList(): HighlightResponse;
+  addIndices(value: number, index?: number): HighlightResponse;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Highlight.AsObject;
-  static toObject(includeInstance: boolean, msg: Highlight): Highlight.AsObject;
-  static serializeBinaryToWriter(message: Highlight, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Highlight;
-  static deserializeBinaryFromReader(message: Highlight, reader: jspb.BinaryReader): Highlight;
+  toObject(includeInstance?: boolean): HighlightResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: HighlightResponse): HighlightResponse.AsObject;
+  static serializeBinaryToWriter(message: HighlightResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): HighlightResponse;
+  static deserializeBinaryFromReader(message: HighlightResponse, reader: jspb.BinaryReader): HighlightResponse;
 }
 
-export namespace Highlight {
+export namespace HighlightResponse {
   export type AsObject = {
     indicesList: Array<number>,
   }
@@ -80,10 +80,10 @@ export class MetaLabelResponse extends jspb.Message {
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): MetaLabelResponse;
 
-  getKeyHighlightsMap(): jspb.Map<string, Highlight>;
+  getKeyHighlightsMap(): jspb.Map<string, HighlightResponse>;
   clearKeyHighlightsMap(): MetaLabelResponse;
 
-  getValueHighlightsMap(): jspb.Map<string, Highlight>;
+  getValueHighlightsMap(): jspb.Map<string, HighlightResponse>;
   clearValueHighlightsMap(): MetaLabelResponse;
 
   serializeBinary(): Uint8Array;
@@ -99,8 +99,8 @@ export namespace MetaLabelResponse {
     name: string,
     namespace: string,
     labelsMap: Array<[string, string]>,
-    keyHighlightsMap: Array<[string, Highlight.AsObject]>,
-    valueHighlightsMap: Array<[string, Highlight.AsObject]>,
+    keyHighlightsMap: Array<[string, HighlightResponse.AsObject]>,
+    valueHighlightsMap: Array<[string, HighlightResponse.AsObject]>,
   }
 }
 

@@ -17,7 +17,7 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-type Highlights struct {
+type Highlight struct {
 	Indices []int32
 }
 
@@ -25,8 +25,8 @@ type PartialObjectMeta struct {
 	Name            string
 	Namespace       string
 	Labels          map[string]string
-	KeyHighlights   map[string]Highlights
-	ValueHighlights map[string]Highlights
+	KeyHighlights   map[string]Highlight
+	ValueHighlights map[string]Highlight
 }
 
 type Searcher struct {
@@ -68,8 +68,8 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 
 	// filter by label key or value match with keyword from cache
 	for _, meta := range s.resourceCache {
-		keyHighlights := make(map[string]Highlights)
-		valueHighlights := make(map[string]Highlights)
+		keyHighlights := make(map[string]Highlight)
+		valueHighlights := make(map[string]Highlight)
 
 		for k, v := range meta.Labels {
 			kMatches := fuzzy.Find(keyword, []string{k})
@@ -81,7 +81,7 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 					indices = append(indices, int32(index))
 				}
 
-				keyHighlights[k] = Highlights{
+				keyHighlights[k] = Highlight{
 					Indices: indices,
 				}
 			}
@@ -92,7 +92,7 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 					indices = append(indices, int32(index))
 				}
 
-				valueHighlights[k] = Highlights{
+				valueHighlights[k] = Highlight{
 					Indices: indices,
 				}
 			}

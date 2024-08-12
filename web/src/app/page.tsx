@@ -13,10 +13,12 @@ import {
   Table,
 } from "@cloudscape-design/components";
 import { generateBadgeColor } from "../../utils/color";
+import Hoverable from "@/components/Hoverable";
 
 export default function App() {
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
   const [labelKeys, setLabelKeys] = useState<string[]>([]);
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const handleSearch = async () => {
@@ -38,6 +40,19 @@ export default function App() {
     setLoading(false);
   };
 
+  const handleMouseEnter = (key: string) => {
+    setHoverKey(key);
+    // HACK: maybe required with transitions
+    // setLabelKeys((prevKeys) => {
+    //   const newKeys = prevKeys.filter((k) => k !== key);
+    //   return [key, ...newKeys];
+    // });
+  };
+
+  const handleMouseLeave = () => {
+    setHoverKey(null);
+  };
+
   return (
     <div>
       <AppLayout
@@ -49,7 +64,18 @@ export default function App() {
               type: "link",
               text: "",
               href: "#",
-              info: <Badge color={generateBadgeColor(key)}>{key}</Badge>,
+              info: (
+                <div
+                  style={{
+                    opacity: hoverKey === key || hoverKey === null ? 1 : 0.2,
+                    transition: "opacity 0.2s",
+                  }}
+                  onMouseEnter={() => handleMouseEnter(key)}
+                  onMouseLeave={() => handleMouseLeave()}
+                >
+                  <Badge color={generateBadgeColor(key)}>{key}</Badge>
+                </div>
+              ),
             }))}
           />
         }
@@ -76,7 +102,17 @@ export default function App() {
                   cell: (item: MetaLabel) => (
                     <ColumnLayout columns={10} borders="horizontal">
                       {Object.entries(item.labels).map(([key, value]) => (
-                        <Badge color={generateBadgeColor(key)}>{value}</Badge>
+                        <div
+                          style={{
+                            opacity:
+                              hoverKey === key || hoverKey === null ? 1 : 0.2,
+                            transition: "opacity 0.2s",
+                          }}
+                          onMouseEnter={() => handleMouseEnter(key)}
+                          onMouseLeave={() => handleMouseLeave()}
+                        >
+                          <Badge color={generateBadgeColor(key)}>{value}</Badge>
+                        </div>
                       ))}
                     </ColumnLayout>
                   ),
@@ -85,6 +121,7 @@ export default function App() {
               items={metaLabels}
               loading={loading}
               empty={<div>No labels found</div>}
+              wrapLines={true}
             />
           </>
         }

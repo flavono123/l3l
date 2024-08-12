@@ -5,6 +5,7 @@ go 1.22.3
 require (
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/rs/cors v1.11.0
+	github.com/sahilm/fuzzy v0.1.1
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 	k8s.io/apimachinery v0.30.3
@@ -23,6 +24,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.11.7 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

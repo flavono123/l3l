@@ -47,9 +47,11 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 
 	for result := range results {
 		response := &pb.MetaLabelResponse{
-			Name:      result.Name,
-			Namespace: result.Namespace,
-			Labels:    result.Labels,
+			Name:            result.Name,
+			Namespace:       result.Namespace,
+			Labels:          result.Labels,
+			KeyHighlights:   convertToPbHighlightMap(result.KeyHighlights),
+			ValueHighlights: convertToPbHighlightMap(result.ValueHighlights),
 		}
 		log.Printf("Sending response: %+v\n", response)
 		if err := stream.Send(response); err != nil {
@@ -98,6 +100,14 @@ func getClient() (dynamic.Interface, error) {
 		return nil, err
 	}
 	return dynamic.NewForConfig(config)
+}
+
+func convertToPbHighlightMap(highlights map[string]k8s.Highlights) map[string]*pb.Highlight {
+	result := make(map[string]*pb.Highlight)
+	for k, v := range highlights {
+		result[k] = &pb.Highlight{Indices: v.Indices}
+	}
+	return result
 }
 
 func main() {

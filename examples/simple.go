@@ -32,7 +32,7 @@ func main() {
 	searcher := k8s.NewSearcher(client, gvr, "")
 
 	// 검색할 키워드 설정
-	keyword := "node" // 예시로 "app" 키워드를 사용
+	keyword := "tst" // 예시로 "app" 키워드를 사용
 
 	// 검색 결과를 받을 스트림 채널 생성
 	stream := make(chan k8s.PartialObjectMeta)
@@ -51,11 +51,7 @@ func main() {
 	}()
 
 	// 리소스 감시 시작
-	err = searcher.Watch(ctx)
-	if err != nil {
-		fmt.Printf("Error watching resources: %v\n", err)
-		return
-	}
+	searcher.Watch()
 
 	// 검색 실행
 	go func() {
@@ -75,7 +71,7 @@ func main() {
 			if !ok {
 				return // 스트림이 닫히면 종료
 			}
-			fmt.Printf("Found: %s/%s with labels: %v\n", meta.Namespace, meta.Name, meta.Labels)
+			fmt.Printf("Found: %s/%s with labels: %v\n", meta.Namespace, meta.Name, meta.Labels, meta.KeyHighlights, meta.ValueHighlights)
 		case <-ctx.Done():
 			return
 		}

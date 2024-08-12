@@ -13,12 +13,20 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/sahilm/fuzzy"
 )
 
+type Highlights struct {
+	Indices []int32
+}
+
 type PartialObjectMeta struct {
-	Name      string
-	Namespace string
-	Labels    map[string]string
+	Name            string
+	Namespace       string
+	Labels          map[string]string
+	KeyHighlights   map[string]Highlights
+	ValueHighlights map[string]Highlights
 }
 
 type Searcher struct {
@@ -60,11 +68,40 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 
 	// filter by label key or value match with keyword from cache
 	for _, meta := range s.resourceCache {
+		keyHighlights := make(map[string]Highlights)
+		valueHighlights := make(map[string]Highlights)
+
 		for k, v := range meta.Labels {
-			if match(k, keyword) || match(v, keyword) {
-				stream <- meta
-				break
+			kMatches := fuzzy.Find(keyword, []string{k})
+			vMatches := fuzzy.Find(keyword, []string{v})
+
+			if len(kMatches) > 0 {
+				var indices []int32
+				for _, index := range kMatches[0].MatchedIndexes {
+					indices = append(indices, int32(index))
+				}
+
+				keyHighlights[k] = Highlights{
+					Indices: indices,
+				}
 			}
+
+			if len(vMatches) > 0 {
+				var indices []int32
+				for _, index := range vMatches[0].MatchedIndexes {
+					indices = append(indices, int32(index))
+				}
+
+				valueHighlights[k] = Highlights{
+					Indices: indices,
+				}
+			}
+		}
+
+		if len(keyHighlights) > 0 || len(valueHighlights) > 0 {
+			meta.KeyHighlights = keyHighlights
+			meta.ValueHighlights = valueHighlights
+			stream <- meta
 		}
 	}
 

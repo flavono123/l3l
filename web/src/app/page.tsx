@@ -2,7 +2,7 @@
 
 import { type MetaLabel, searchLabels } from "@/grpc/client";
 import { SearchRequest } from "@/grpc/label_service_pb";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AppLayout,
   Badge,
@@ -11,6 +11,7 @@ import {
   Header,
   SideNavigation,
   Table,
+  TextFilter,
 } from "@cloudscape-design/components";
 import { generateBadgeColor } from "../../utils/color";
 import Hoverable from "@/components/Hoverable";
@@ -19,26 +20,30 @@ export default function App() {
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
   const [labelKeys, setLabelKeys] = useState<string[]>([]);
   const [hoverKey, setHoverKey] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [keyword, setKeyword] = useState<string>("");
 
-  const handleSearch = async () => {
-    setLoading(true);
-    try {
-      const result: MetaLabel[] = await searchLabels({
-        group: "",
-        version: "v1",
-        resource: "nodes",
-        namespace: "",
-        keyword: "node",
-      } as SearchRequest.AsObject);
-      setMetaLabels(result);
+  useEffect(() => {
+    const fetchLabels = async () => {
+      setLoading(true);
+      try {
+        const result: MetaLabel[] = await searchLabels({
+          group: "",
+          version: "v1",
+          resource: "nodes",
+          namespace: "",
+          keyword: keyword,
+        } as SearchRequest.AsObject);
+        setMetaLabels(result);
+        setLabelKeys(result.map((item) => Object.keys(item.labels)).flat());
+      } catch (error) {
+        console.error(error);
+      }
+      setLoading(false);
+    };
 
-      setLabelKeys(result.map((item) => Object.keys(item.labels)).flat());
-    } catch (error) {
-      console.error(error);
-    }
-    setLoading(false);
-  };
+    fetchLabels();
+  }, [keyword]);
 
   const handleMouseEnter = (key: string) => {
     setHoverKey(key);
@@ -80,9 +85,15 @@ export default function App() {
         contentType="table"
         content={
           <>
-            <Button onClick={handleSearch}>Search</Button>
             <Table
               header={<Header>Labels</Header>}
+              filter={
+                <TextFilter
+                  filteringText={keyword}
+                  filteringPlaceholder="Find by labels' key/value"
+                  onChange={({ detail }) => setKeyword(detail.filteringText)}
+                />
+              }
               columnDefinitions={[
                 {
                   id: "name",

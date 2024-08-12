@@ -1,5 +1,9 @@
 import { LabelServiceClient } from "./Label_serviceServiceClientPb";
-import { type MetaLabelResponse, SearchRequest } from "./label_service_pb";
+import {
+  MetaLabelResponse,
+  Highlight,
+  SearchRequest,
+} from "./label_service_pb";
 
 const client = new LabelServiceClient("http://localhost:50051", null, null);
 
@@ -7,6 +11,8 @@ export type MetaLabel = {
   name: string;
   namespace: string;
   labels: { [key: string]: string };
+  keyHighlights: { [key: string]: number[] };
+  valueHighlights: { [key: string]: number[] };
 };
 
 export async function searchLabels({
@@ -28,13 +34,32 @@ export async function searchLabels({
     const metaLabels: MetaLabel[] = [];
 
     stream.on("data", (response: MetaLabelResponse) => {
-      const { name, namespace, labelsMap }: MetaLabelResponse.AsObject =
-        response.toObject();
+      const {
+        name,
+        namespace,
+        labelsMap,
+        keyHighlightsMap,
+        valueHighlightsMap,
+      }: MetaLabelResponse.AsObject = response.toObject();
 
       metaLabels.push({
         name,
         namespace,
         labels: Object.fromEntries(labelsMap),
+        keyHighlights: Object.fromEntries(
+          Object.entries(keyHighlightsMap).map(
+            ([_, value]: [string, [string, Highlight.AsObject]]) => [
+              value[0],             // key of label
+              value[1].indicesList, // indices of keyword in key
+            ],
+          ),
+        ),
+        valueHighlights: Object.fromEntries(
+          Object.entries(valueHighlightsMap).map(([_, value]: [string, [string, Highlight.AsObject]]) => [
+            value[0],              // key of label
+            value[1].indicesList,  // indices of keyword in value
+          ]),
+        ),
       });
     });
 

@@ -50,6 +50,26 @@ export namespace SearchRequest {
   }
 }
 
+export class Highlight extends jspb.Message {
+  getIndicesList(): Array<number>;
+  setIndicesList(value: Array<number>): Highlight;
+  clearIndicesList(): Highlight;
+  addIndices(value: number, index?: number): Highlight;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Highlight.AsObject;
+  static toObject(includeInstance: boolean, msg: Highlight): Highlight.AsObject;
+  static serializeBinaryToWriter(message: Highlight, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Highlight;
+  static deserializeBinaryFromReader(message: Highlight, reader: jspb.BinaryReader): Highlight;
+}
+
+export namespace Highlight {
+  export type AsObject = {
+    indicesList: Array<number>,
+  }
+}
+
 export class MetaLabelResponse extends jspb.Message {
   getName(): string;
   setName(value: string): MetaLabelResponse;
@@ -59,6 +79,12 @@ export class MetaLabelResponse extends jspb.Message {
 
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): MetaLabelResponse;
+
+  getKeyHighlightsMap(): jspb.Map<string, Highlight>;
+  clearKeyHighlightsMap(): MetaLabelResponse;
+
+  getValueHighlightsMap(): jspb.Map<string, Highlight>;
+  clearValueHighlightsMap(): MetaLabelResponse;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): MetaLabelResponse.AsObject;
@@ -73,6 +99,8 @@ export namespace MetaLabelResponse {
     name: string,
     namespace: string,
     labelsMap: Array<[string, string]>,
+    keyHighlightsMap: Array<[string, Highlight.AsObject]>,
+    valueHighlightsMap: Array<[string, Highlight.AsObject]>,
   }
 }
 

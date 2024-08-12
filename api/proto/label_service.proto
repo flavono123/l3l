@@ -19,8 +19,14 @@ message SearchRequest {
   string keyword = 5;
 }
 
+message Highlight {
+  repeated int32 indices = 1;
+}
+
 message MetaLabelResponse {
   string name = 1;
   string namespace = 2;
   map<string, string> labels = 3;
+  map<string, Highlight> key_highlights = 4;
+  map<string, Highlight> value_highlights = 5;
 }

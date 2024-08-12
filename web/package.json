@@ -10,12 +10,14 @@
   },
   "dependencies": {
     "@cloudscape-design/components": "^3.0.709",
+    "@cloudscape-design/design-tokens": "^3.0.43",
     "@cloudscape-design/global-styles": "^1.0.32",
     "google-protobuf": "^3.21.4",
     "grpc-web": "^1.5.0",
     "next": "14.2.5",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "sass": "^1.77.8"
   },
   "devDependencies": {
     "@types/node": "^20",

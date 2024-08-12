@@ -1,30 +1,36 @@
-"use client"
+"use client";
 
 import { type MetaLabel, searchLabels } from "@/grpc/client";
 import { SearchRequest } from "@/grpc/label_service_pb";
 import { useState } from "react";
 import {
+  Badge,
   Button,
   ColumnLayout,
   Header,
+  SideNavigation,
   Table,
-} from "@cloudscape-design/components"
+} from "@cloudscape-design/components";
+import { generateBadgeColor } from "../../utils/color";
 
 export default function App() {
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
+  const [labelKeys, setLabelKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const handleSearch = async () => {
     setLoading(true);
     try {
       const result: MetaLabel[] = await searchLabels({
-        group: '',
-        version: 'v1',
-        resource: 'nodes',
-        namespace: '',
-        keyword: 'node'
+        group: "",
+        version: "v1",
+        resource: "nodes",
+        namespace: "",
+        keyword: "node",
       } as SearchRequest.AsObject);
       setMetaLabels(result);
+
+      setLabelKeys(result.map((item) => Object.keys(item.labels)).flat());
     } catch (error) {
       console.error(error);
     }
@@ -34,20 +40,31 @@ export default function App() {
   return (
     <div>
       <Button onClick={handleSearch}>Search</Button>
+      <SideNavigation
+        header={{ text: "Labels keys", href: "#" }}
+        items={labelKeys.map((key) => ({
+          type: "link",
+          text: "",
+          href: "#",
+          info: <Badge color={generateBadgeColor(key)}>{key}</Badge>,
+        }))}
+      ></SideNavigation>
       <Table
         header={<Header>Labels</Header>}
         columnDefinitions={[
-          { id: 'name', header: 'Name', cell: (item: MetaLabel) => item.name },
-          { id: 'namespace', header: 'Namespace', cell: (item: MetaLabel) => item.namespace },
+          { id: "name", header: "Name", cell: (item: MetaLabel) => item.name },
           {
-            id: 'labels',
-            header: 'Labels',
+            id: "namespace",
+            header: "Namespace",
+            cell: (item: MetaLabel) => item.namespace,
+          },
+          {
+            id: "labels",
+            header: "Labels",
             cell: (item: MetaLabel) => (
-              <ColumnLayout columns={1} variant="text-grid">
+              <ColumnLayout columns={10} borders="horizontal">
                 {Object.entries(item.labels).map(([key, value]) => (
-                  <div key={key}>
-                    <strong>{key}</strong>: {value}
-                  </div>
+                  <Badge color={generateBadgeColor(key)}>{value}</Badge>
                 ))}
               </ColumnLayout>
             ),

@@ -15,6 +15,7 @@ import {
 } from "@cloudscape-design/components";
 import { generateBadgeColor } from "../../utils/color";
 import Hoverable from "@/components/Hoverable";
+import HighlightedText from "@/components/HighlightedText";
 
 export default function App() {
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
@@ -117,7 +118,12 @@ export default function App() {
                           handleMouseEnter={handleMouseEnter}
                           handleMouseLeave={handleMouseLeave}
                         >
-                          <Badge color={generateBadgeColor(key)}>{value}</Badge>
+                          <Badge color={generateBadgeColor(key)}>
+                            <HighlightedText
+                              text={value}
+                              indices={item.valueHighlights[key] || []}
+                            />
+                          </Badge>
                         </Hoverable>
                       ))}
                     </ColumnLayout>

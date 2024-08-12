@@ -26,7 +26,6 @@ export default function HighlightedText({
               key={`highlight-${i}-${end}`}
               style={{
                 backgroundColor: "yellow",
-                fontWeight: "bold",
                 color: "black",
               }}
             >

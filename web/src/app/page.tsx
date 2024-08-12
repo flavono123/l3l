@@ -2,7 +2,7 @@
 
 import { type MetaLabel, searchLabels } from "@/grpc/client";
 import { SearchRequest } from "@/grpc/label_service_pb";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   AppLayout,
   Badge,
@@ -16,6 +16,7 @@ import {
 import { generateBadgeColor } from "../../utils/color";
 import Hoverable from "@/components/Hoverable";
 import HighlightedText from "@/components/HighlightedText";
+import _ from "lodash";
 
 export default function App() {
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
@@ -27,9 +28,16 @@ export default function App() {
     {},
   );
 
+  const debounceSetLoading = useCallback(
+    _.debounce((loading: boolean) => {
+      setLoading(loading);
+    }, 500),
+    [],
+  );
+
   useEffect(() => {
     const fetchLabels = async () => {
-      setLoading(true);
+      debounceSetLoading(true);
       try {
         const result: MetaLabel[] = await searchLabels({
           group: "",
@@ -44,11 +52,15 @@ export default function App() {
       } catch (error) {
         console.error(error);
       }
-      setLoading(false);
+      debounceSetLoading(false);
     };
 
     fetchLabels();
-  }, [keyword]);
+
+    return () => {
+      debounceSetLoading.cancel();
+    };
+  }, [keyword, debounceSetLoading]);
 
   const handleMouseEnter = (key: string) => {
     setHoverKey(key);

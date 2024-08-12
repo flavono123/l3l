@@ -38,8 +38,8 @@ export default function App() {
           keyword: keyword,
         } as SearchRequest.AsObject);
         setMetaLabels(result);
-        setLabelKeys(result.map((item) => Object.keys(item.labels)).flat());
-        setKeyHighlight(result[0]?.keyHighlights); // all metaLabels have the same keyHighlights
+        setLabelKeys(Object.keys(result[0]?.labels || {})); // HACK: these two are fetch from response's metadata should be added, not the first item
+        setKeyHighlight(result[0]?.keyHighlights || []); // all metaLabels have the same keyHighlights
       } catch (error) {
         console.error(error);
       }

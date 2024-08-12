@@ -20,10 +20,10 @@ export default function HighlightedText({
         const end = index;
         lastIndex = index + 1;
         return (
-          <Fragment key={text}>
-            {text.slice(start, end)}
+          <Fragment key={`fragment-${i}`}>
+            <span key={`text-${i}-${start}`}>{text.slice(start, end)}</span>
             <span
-              key={i}
+              key={`highlight-${i}-${end}`}
               style={{
                 backgroundColor: "yellow",
                 fontWeight: "bold",

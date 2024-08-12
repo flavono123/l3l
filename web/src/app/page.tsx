@@ -70,6 +70,7 @@ export default function App() {
           <SideNavigation
             header={{ text: "Labels keys", href: "#" }}
             items={labelKeys.map((key) => ({
+              key: key,
               type: "link",
               text: "",
               href: "#",
@@ -122,7 +123,7 @@ export default function App() {
                     <ColumnLayout columns={10} borders="horizontal">
                       {Object.entries(item.labels).map(([key, value]) => (
                         <Hoverable
-                          key={key}
+                          key={`${item.namespace}/${item.name}-${key}`}
                           keyName={key}
                           hoverKey={hoverKey}
                           handleMouseEnter={handleMouseEnter}

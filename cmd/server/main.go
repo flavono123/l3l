@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,12 +23,20 @@ import (
 // server는 pb.LabelServiceServer 인터페이스를 구현합니다.
 type server struct {
 	pb.UnimplementedLabelServiceServer
+	pb.ClusterInfoServiceServer
 	searchers map[string]*k8s.Searcher
+	retriever *k8s.Retriever
 }
 
 func NewServer() *server {
+	config, err := clientcmd.BuildConfigFromFlags("", filepath.Join(os.Getenv("HOME"), ".kube", "config"))
+	if err != nil {
+		panic(err)
+	}
+
 	return &server{
 		searchers: make(map[string]*k8s.Searcher),
+		retriever: k8s.NewRetriever(config),
 	}
 }
 
@@ -59,6 +68,33 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 		}
 	}
 	return nil
+}
+
+func (s *server) GetClusterInfo(ctx context.Context, req *pb.ClusterInfoRequest) (*pb.ClusterInfoResponse, error) {
+	namespaces, err := s.retriever.GetNamespaces()
+	if err != nil {
+		return nil, err
+	}
+
+	gvrList, err := s.retriever.GetGVRs()
+	if err != nil {
+		return nil, err
+	}
+
+	var gvrs []*pb.GroupVersionResource
+	for _, gvr := range gvrList {
+		gvrs = append(gvrs, &pb.GroupVersionResource{
+			Group:    gvr.Group,
+			Version:  gvr.Version,
+			Resource: gvr.Resource,
+		})
+	}
+
+	return &pb.ClusterInfoResponse{
+		CurrentContext: "todo",
+		Namespaces:     namespaces,
+		Gvrs:           gvrs,
+	}, nil
 }
 
 func (s *server) getSearcher(req *pb.SearchRequest) *k8s.Searcher {
@@ -112,7 +148,9 @@ func convertToPbHighlightMap(highlights map[string]k8s.Highlight) map[string]*pb
 
 func main() {
 	grpcServer := grpc.NewServer()
-	pb.RegisterLabelServiceServer(grpcServer, NewServer())
+	srv := NewServer()
+	pb.RegisterLabelServiceServer(grpcServer, srv)
+	pb.RegisterClusterInfoServiceServer(grpcServer, srv)
 
 	// Reflection API 활성화
 	reflection.Register(grpcServer)

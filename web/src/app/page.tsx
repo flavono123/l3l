@@ -1,6 +1,11 @@
 "use client";
 
-import { type MetaLabel, searchLabels } from "@/grpc/client";
+import {
+  type MetaLabel,
+  searchLabels,
+  getClusterInfo,
+  ClusterInfo,
+} from "@/grpc/client";
 import { SearchRequest } from "@/grpc/label_service_pb";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -49,6 +54,9 @@ export default function App() {
         setMetaLabels(result);
         setLabelKeys(Object.keys(result[0]?.labels || {})); // HACK: these two are fetch from response's metadata should be added, not the first item
         setKeyHighlight(result[0]?.keyHighlights || []); // all metaLabels have the same keyHighlights
+
+        const clusterInfo: ClusterInfo = await getClusterInfo();
+        console.log(clusterInfo);
       } catch (error) {
         console.error(error);
       }

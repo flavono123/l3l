@@ -1,11 +1,26 @@
+import { ClusterInfoServiceClient } from "./Cluster_info_serviceServiceClientPb";
 import { LabelServiceClient } from "./Label_serviceServiceClientPb";
+import {
+  ClusterInfoRequest,
+  ClusterInfoResponse,
+  GroupVersionResource,
+} from "./cluster_info_service_pb";
 import {
   MetaLabelResponse,
   HighlightResponse,
   SearchRequest,
 } from "./label_service_pb";
 
-const client = new LabelServiceClient("http://localhost:50051", null, null);
+const labelClient = new LabelServiceClient(
+  "http://localhost:50051",
+  null,
+  null,
+);
+const clusterInfoClient = new ClusterInfoServiceClient(
+  "http://localhost:50051",
+  null,
+  null,
+);
 
 export type MetaLabel = {
   name: string;
@@ -30,7 +45,7 @@ export async function searchLabels({
     request.setNamespace(namespace);
     request.setKeyword(keyword);
 
-    const stream = client.searchLabels(request, {});
+    const stream = labelClient.searchLabels(request, {});
     const metaLabels: MetaLabel[] = [];
 
     stream.on("data", (response: MetaLabelResponse) => {
@@ -49,16 +64,18 @@ export async function searchLabels({
         keyHighlights: Object.fromEntries(
           Object.entries(keyHighlightsMap).map(
             ([_, value]: [string, [string, HighlightResponse.AsObject]]) => [
-              value[0],             // key of label
+              value[0], // key of label
               value[1].indicesList, // indices of keyword in key
             ],
           ),
         ),
         valueHighlights: Object.fromEntries(
-          Object.entries(valueHighlightsMap).map(([_, value]: [string, [string, HighlightResponse.AsObject]]) => [
-            value[0],              // key of label
-            value[1].indicesList,  // indices of keyword in value
-          ]),
+          Object.entries(valueHighlightsMap).map(
+            ([_, value]: [string, [string, HighlightResponse.AsObject]]) => [
+              value[0], // key of label
+              value[1].indicesList, // indices of keyword in value
+            ],
+          ),
         ),
       });
     });
@@ -71,5 +88,47 @@ export async function searchLabels({
     stream.on("error", (err) => {
       reject(err);
     });
+  });
+}
+
+export type ClusterInfo = {
+  currentContext: string;
+  namespaces: string[];
+  gvrs: {
+    group: string;
+    version: string;
+    resource: string;
+  }[];
+};
+
+export async function getClusterInfo(): Promise<ClusterInfo> {
+  return new Promise((resolve, reject) => {
+    const request = new ClusterInfoRequest();
+
+    clusterInfoClient.getClusterInfo(
+      request,
+      {},
+      (err, response: ClusterInfoResponse) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        const { currentContext, namespacesList, gvrsList } =
+          response.toObject();
+
+        const gvrs = gvrsList.map((gvr: GroupVersionResource.AsObject) => ({
+          group: gvr.group,
+          version: gvr.version,
+          resource: gvr.resource,
+        }));
+
+        resolve({
+          currentContext,
+          namespaces: namespacesList,
+          gvrs,
+        });
+      },
+    );
   });
 }

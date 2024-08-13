@@ -192,7 +192,7 @@ type MetaLabelResponse struct {
 	Name            string                        `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Namespace       string                        `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	Labels          map[string]string             `protobuf:"bytes,3,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	KeyHighlights   map[string]*HighlightResponse `protobuf:"bytes,4,rep,name=key_highlights,json=keyHighlights,proto3" json:"key_highlights,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	KeyHighlights   map[string]*HighlightResponse `protobuf:"bytes,4,rep,name=key_highlights,json=keyHighlights,proto3" json:"key_highlights,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // TODO: dedup in upper level
 	ValueHighlights map[string]*HighlightResponse `protobuf:"bytes,5,rep,name=value_highlights,json=valueHighlights,proto3" json:"value_highlights,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 

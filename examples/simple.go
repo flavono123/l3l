@@ -15,7 +15,7 @@ func main() {
 		panic(err)
 	}
 
-	retriever := k8s.NewGVRetriever(config)
+	retriever := k8s.NewRetriever(config)
 	gvrs, err := retriever.GetGVRs()
 	if err != nil {
 		panic(err)

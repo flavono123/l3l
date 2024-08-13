@@ -13,12 +13,12 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-type GVRetriever struct {
+type Retriever struct {
 	kubernetesClientset kubernetes.Interface
 	discoveryClient     discovery.DiscoveryInterface
 }
 
-func NewGVRetriever(config *rest.Config) *GVRetriever {
+func NewRetriever(config *rest.Config) *Retriever {
 	kubernetesClientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err)
@@ -30,13 +30,13 @@ func NewGVRetriever(config *rest.Config) *GVRetriever {
 
 	discoveryClient := discovery.NewDiscoveryClient(apiextensionClientset.RESTClient())
 
-	return &GVRetriever{
+	return &Retriever{
 		kubernetesClientset: kubernetesClientset,
 		discoveryClient:     discoveryClient,
 	}
 }
 
-func (g *GVRetriever) GetNamespaces() ([]string, error) {
+func (g *Retriever) GetNamespaces() ([]string, error) {
 	namespaceList, err := g.kubernetesClientset.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		log.Fatalf("Error getting namespaces: %v", err)
@@ -53,7 +53,7 @@ func (g *GVRetriever) GetNamespaces() ([]string, error) {
 	return namespaces, nil
 }
 
-func (g *GVRetriever) GetGVRs() ([]schema.GroupVersionResource, error) {
+func (g *Retriever) GetGVRs() ([]schema.GroupVersionResource, error) {
 	apiResourceLists, err := g.discoveryClient.ServerPreferredResources()
 	if err != nil {
 		log.Fatalf("Error getting server resources: %v", err)
@@ -77,7 +77,7 @@ func (g *GVRetriever) GetGVRs() ([]schema.GroupVersionResource, error) {
 	return gvrList, nil
 }
 
-func (g *GVRetriever) sortGVRs(gvrList []schema.GroupVersionResource) {
+func (g *Retriever) sortGVRs(gvrList []schema.GroupVersionResource) {
 	sort.Slice(gvrList, func(i, j int) bool {
 		return gvrList[i].String() < gvrList[j].String()
 	})

@@ -74,7 +74,7 @@ func TestGVRetriever(t *testing.T) {
 		return true, mockResult, nil
 	})
 
-	retriever := &GVRetriever{
+	retriever := &Retriever{
 		kubernetesClientset: fakeClientSet,
 		discoveryClient:     fakeDiscovery,
 	}

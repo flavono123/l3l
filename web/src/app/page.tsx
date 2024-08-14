@@ -12,7 +12,9 @@ import {
   AppLayout,
   Badge,
   ColumnLayout,
+  ContentLayout,
   Header,
+  Link,
   SideNavigation,
   SpaceBetween,
   Table,
@@ -32,6 +34,9 @@ export default function App() {
   const [keyHighlight, setKeyHighlight] = useState<{ [key: string]: number[] }>(
     {},
   );
+  const [clusterInfo, setClusterInfo] = useState<ClusterInfo>({
+    gvrs: [],
+  } as ClusterInfo);
 
   const debounceSetLoading = useCallback(
     _.debounce((loading: boolean) => {
@@ -39,6 +44,19 @@ export default function App() {
     }, 500),
     [],
   );
+
+  useEffect(() => {
+    const fetrchClusterInfo = async () => {
+      try {
+        const clusterInfo: ClusterInfo = await getClusterInfo();
+        setClusterInfo(clusterInfo);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetrchClusterInfo();
+  }, []);
 
   useEffect(() => {
     const fetchLabels = async () => {
@@ -54,9 +72,6 @@ export default function App() {
         setMetaLabels(result);
         setLabelKeys(Object.keys(result[0]?.labels || {})); // HACK: these two are fetch from response's metadata should be added, not the first item
         setKeyHighlight(result[0]?.keyHighlights || []); // all metaLabels have the same keyHighlights
-
-        const clusterInfo: ClusterInfo = await getClusterInfo();
-        console.log(clusterInfo);
       } catch (error) {
         console.error(error);
       }
@@ -88,30 +103,13 @@ export default function App() {
       <AppLayout
         navigationOpen={true}
         navigation={
-          // TODO: current items should be in a column layout
           <SideNavigation
-            header={{ text: "Labels keys", href: "#" }}
-            items={labelKeys.map((key) => ({
-              key: key,
+            header={{ text: "Resources", href: "#" }}
+            items={clusterInfo.gvrs.map((gvr) => ({
+              key: `${gvr.group}/${gvr.version}/${gvr.resource}`,
               type: "link",
-              text: "",
+              text: `${gvr.group}/${gvr.version}/${gvr.resource}`,
               href: "#",
-              info: (
-                <Hoverable
-                  key={key}
-                  keyName={key}
-                  hoverKey={hoverKey}
-                  handleMouseEnter={handleMouseEnter}
-                  handleMouseLeave={handleMouseLeave}
-                >
-                  <Badge color={generateBadgeColor(key)}>
-                    <HighlightedText
-                      text={key}
-                      indices={keyHighlight[key] || []}
-                    />
-                  </Badge>
-                </Hoverable>
-              ),
             }))}
           />
         }
@@ -149,7 +147,7 @@ export default function App() {
                   id: "labels",
                   header: "Labels",
                   cell: (item: MetaLabel) => (
-                    <ColumnLayout columns={10} borders="horizontal">
+                    <ColumnLayout columns={100} borders="horizontal">
                       <SpaceBetween direction="horizontal" size="xxs">
                         {Object.entries(item.labels).map(([key, value]) => (
                           <Hoverable
@@ -179,6 +177,50 @@ export default function App() {
               wrapLines={true}
             />
           </>
+        }
+        toolsOpen={true}
+        // TODO: find proper items iterable component than side nav
+        tools={
+          <ContentLayout
+            breadcrumbs="WORKINPROCESS"
+            header={
+              <SpaceBetween size="m">
+                <Header
+                  variant="h3"
+                  info={<Link variant="info">Info</Link>}
+                  description="All key matched by keyword to keys or values"
+                >
+                  Label Keys
+                </Header>
+              </SpaceBetween>
+            }
+          >
+            <SideNavigation
+              header={{ text: "Labels keys", href: "#" }}
+              items={labelKeys.map((key) => ({
+                key: key,
+                type: "link",
+                text: "",
+                href: "#",
+                info: (
+                  <Hoverable
+                    key={key}
+                    keyName={key}
+                    hoverKey={hoverKey}
+                    handleMouseEnter={handleMouseEnter}
+                    handleMouseLeave={handleMouseLeave}
+                  >
+                    <Badge color={generateBadgeColor(key)}>
+                      <HighlightedText
+                        text={key}
+                        indices={keyHighlight[key] || []}
+                      />
+                    </Badge>
+                  </Hoverable>
+                ),
+              }))}
+            />
+          </ContentLayout>
         }
       ></AppLayout>
     </div>

@@ -24,6 +24,7 @@ import { generateBadgeColor } from "../../utils/color";
 import Hoverable from "@/components/Hoverable";
 import HighlightedText from "@/components/HighlightedText";
 import _ from "lodash";
+import GvrNavigation from "@/components/GvrNavigation";
 
 export default function App() {
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
@@ -34,9 +35,6 @@ export default function App() {
   const [keyHighlight, setKeyHighlight] = useState<{ [key: string]: number[] }>(
     {},
   );
-  const [clusterInfo, setClusterInfo] = useState<ClusterInfo>({
-    gvrs: [],
-  } as ClusterInfo);
 
   const debounceSetLoading = useCallback(
     _.debounce((loading: boolean) => {
@@ -44,19 +42,6 @@ export default function App() {
     }, 500),
     [],
   );
-
-  useEffect(() => {
-    const fetrchClusterInfo = async () => {
-      try {
-        const clusterInfo: ClusterInfo = await getClusterInfo();
-        setClusterInfo(clusterInfo);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetrchClusterInfo();
-  }, []);
 
   useEffect(() => {
     const fetchLabels = async () => {
@@ -102,17 +87,7 @@ export default function App() {
     <div>
       <AppLayout
         navigationOpen={true}
-        navigation={
-          <SideNavigation
-            header={{ text: "Resources", href: "#" }}
-            items={clusterInfo.gvrs.map((gvr) => ({
-              key: `${gvr.group}/${gvr.version}/${gvr.resource}`,
-              type: "link",
-              text: `${gvr.group}/${gvr.version}/${gvr.resource}`,
-              href: "#",
-            }))}
-          />
-        }
+        navigation={<GvrNavigation />}
         contentType="table"
         content={
           <>

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import _ from "lodash";
 
 interface GvrNavigationProps {
-  // Props
+  handleGvrOnFollow: (gvr: GVR) => void;
 }
 
-export default function GvrNavigation() {
+export default function GvrNavigation({
+  handleGvrOnFollow,
+}: GvrNavigationProps) {
   const [clusterInfo, setClusterInfo] = useState<ClusterInfo>({
     currentContext: "",
     gvrs: [] as unknown as GVR,
@@ -49,11 +51,16 @@ export default function GvrNavigation() {
         items: resourcesByGroupVersion[groupVersion].map((gvr) => ({
           type: "link",
           text: gvr.resource,
-          href: `#${gvr.resource}.${gvr.group}.${gvr.version}`,
+          href: `#${gvr.group}/${gvr.version}/${gvr.resource}`,
         })),
       }))}
-      onFollow={(event) => {
-        console.log(`${event.detail.href} clicked`);
+      onFollow={({ detail }) => {
+        if (detail.type !== "link") {
+          return;
+        }
+        const [group, version, resource] = detail.href.slice(1).split("/");
+        console.log(`select: ${group}, ${version}, ${resource}`);
+        handleGvrOnFollow({ group, version, resource });
       }}
     />
   );

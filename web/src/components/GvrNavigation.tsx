@@ -1,6 +1,7 @@
-import { ClusterInfo, getClusterInfo } from "@/grpc/client";
+import { type GVR, type ClusterInfo, getClusterInfo } from "@/grpc/client";
 import { SideNavigation } from "@cloudscape-design/components";
 import { useEffect, useState } from "react";
+import _ from "lodash";
 
 interface GvrNavigationProps {
   // Props
@@ -8,31 +9,52 @@ interface GvrNavigationProps {
 
 export default function GvrNavigation() {
   const [clusterInfo, setClusterInfo] = useState<ClusterInfo>({
-    gvrs: [],
-  } as ClusterInfo);
+    currentContext: "",
+    gvrs: [] as unknown as GVR,
+    namespaces: [],
+  } as unknown as ClusterInfo);
+  const [resourcesByGroupVersion, setResourcesByGroupVersion] = useState<{
+    [key: string]: GVR[];
+  }>({});
 
   useEffect(() => {
-    const fetrchClusterInfo = async () => {
+    const fetchClusterInfo = async () => {
       try {
-        const clusterInfo: ClusterInfo = await getClusterInfo();
-        setClusterInfo(clusterInfo);
+        const result: ClusterInfo = await getClusterInfo();
+        setClusterInfo(result);
+        setResourcesByGroupVersion(
+          _.groupBy(result.gvrs, (gvr: GVR) =>
+            gvr.group === ""
+              ? `core/${gvr.version}`
+              : `${gvr.group}/${gvr.version}`,
+          ),
+        );
+        console.log(resourcesByGroupVersion);
       } catch (error) {
         console.error(error);
       }
     };
 
-    fetrchClusterInfo();
+    fetchClusterInfo();
+    // group gvrs by group-version
   }, []);
 
   return (
     <SideNavigation
       header={{ text: "Resources", href: "#" }}
-      items={clusterInfo.gvrs.map((gvr) => ({
-        key: `${gvr.group}/${gvr.version}/${gvr.resource}`,
-        type: "link",
-        text: `${gvr.group}/${gvr.version}/${gvr.resource}`,
-        href: "#",
+      items={Object.keys(resourcesByGroupVersion).map((groupVersion) => ({
+        type: "expandable-link-group",
+        text: groupVersion,
+        href: `#${groupVersion}`,
+        items: resourcesByGroupVersion[groupVersion].map((gvr) => ({
+          type: "link",
+          text: gvr.resource,
+          href: `#${gvr.resource}.${gvr.group}.${gvr.version}`,
+        })),
       }))}
+      onFollow={(event) => {
+        console.log(`${event.detail.href} clicked`);
+      }}
     />
   );
 }

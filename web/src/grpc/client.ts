@@ -91,14 +91,16 @@ export async function searchLabels({
   });
 }
 
+export type GVR = {
+  group: string;
+  version: string;
+  resource: string;
+};
+
 export type ClusterInfo = {
   currentContext: string;
   namespaces: string[];
-  gvrs: {
-    group: string;
-    version: string;
-    resource: string;
-  }[];
+  gvrs: GVR[];
 };
 
 export async function getClusterInfo(): Promise<ClusterInfo> {

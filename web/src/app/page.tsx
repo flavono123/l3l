@@ -1,6 +1,12 @@
 "use client";
 
-import { type MetaLabel, searchLabels, GVR } from "@/grpc/client";
+import {
+  type MetaLabel,
+  searchLabels,
+  GVR,
+  ClusterInfo,
+  getClusterInfo,
+} from "@/grpc/client";
 import { SearchRequest } from "@/grpc/label_service_pb";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -10,6 +16,8 @@ import {
   ContentLayout,
   Header,
   Link,
+  Select,
+  SelectProps,
   SideNavigation,
   SpaceBetween,
   Table,
@@ -22,6 +30,7 @@ import _ from "lodash";
 import GvrNavigation from "@/components/GvrNavigation";
 
 export default function App() {
+  // state
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
   const [labelKeys, setLabelKeys] = useState<string[]>([]);
   const [hoverKey, setHoverKey] = useState<string | null>(null);
@@ -35,12 +44,32 @@ export default function App() {
     version: "",
     resource: "",
   } as GVR);
+  const [namespaces, setNamespaces] = useState<string[]>([]);
+  const defaultSelectedNamespace: SelectProps.Option = {
+    label: "All namespaces",
+    value: "",
+  };
+  const [selectedNamespace, setSelectedNamespace] =
+    useState<SelectProps.Option>(defaultSelectedNamespace);
+
   const debounceSetLoading = useCallback(
     _.debounce((loading: boolean) => {
       setLoading(loading);
     }, 500),
     [],
   );
+
+  useEffect(() => {
+    const fetchNamespaces = async () => {
+      try {
+        const result: ClusterInfo = await getClusterInfo();
+        setNamespaces(result.namespaces);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchNamespaces();
+  }, []);
 
   useEffect(() => {
     const fetchLabels = async () => {
@@ -112,6 +141,20 @@ export default function App() {
                 <Header
                   counter={`${metaLabels.length}`}
                   description="Label values"
+                  actions={
+                    <Select
+                      selectedOption={selectedNamespace}
+                      onChange={({ detail }) => {
+                        setSelectedNamespace(detail.selectedOption);
+                      }}
+                      options={[defaultSelectedNamespace].concat(
+                        namespaces.map((namespace) => ({
+                          label: namespace,
+                          value: namespace,
+                        })),
+                      )}
+                    />
+                  }
                 >
                   {headerText(selectedGvr)}
                 </Header>

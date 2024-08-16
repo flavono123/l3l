@@ -1,6 +1,8 @@
 import { ClusterInfoServiceClient } from "./Cluster_info_serviceServiceClientPb";
 import { LabelServiceClient } from "./Label_serviceServiceClientPb";
 import {
+  ClusterInfoRequest,
+  ClusterInfoResponse,
   GroupVersionResourceRequest,
   GroupVersionResourceResponse,
 } from "./cluster_info_service_pb";
@@ -95,12 +97,6 @@ export type GVR = {
   resource: string;
 };
 
-export type ClusterInfo = {
-  currentContext: string;
-  namespaces: string[];
-  gvrs: GVR[];
-};
-
 export async function listGroupVersionResources(): Promise<GVR[]> {
   return new Promise((resolve, reject) => {
     const request = new GroupVersionResourceRequest();
@@ -119,5 +115,31 @@ export async function listGroupVersionResources(): Promise<GVR[]> {
     stream.on("error", (err) => {
       reject(err);
     });
+  });
+}
+
+export type ClusterInfo = {
+  currentContext: string;
+  namespaces: string[];
+};
+
+export async function getClusterInfo(): Promise<ClusterInfo> {
+  return new Promise((resolve, reject) => {
+    const request = new ClusterInfoRequest();
+    clusterInfoClient.getClusterInfo(
+      request,
+      {},
+      (err, response: ClusterInfoResponse) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        const { currentContext, namespacesList } = response.toObject();
+        resolve({
+          currentContext,
+          namespaces: namespacesList,
+        });
+      },
+    );
   });
 }

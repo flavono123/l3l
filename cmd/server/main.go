@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/flavono123/l3l/internal/k8s"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
@@ -44,17 +45,26 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 	log.Printf("Received SearchLabels request: %+v\n", req)
 	searcher := s.getSearcher(req)
 
-	results := make(chan k8s.PartialObjectMeta)
+	channel := make(chan k8s.PartialObjectMeta)
 	go func() {
-		defer close(results)
+		defer close(channel)
 
 		log.Printf("Starting search for keyword: %s\n", req.Keyword)
-		if err := searcher.Search(req.Keyword, results); err != nil {
+		if err := searcher.Search(req.Keyword, channel); err != nil {
 			panic(err)
 		}
 	}()
 
-	for result := range results {
+	// sort channel by name
+	var results []k8s.PartialObjectMeta
+	for ch := range channel {
+		results = append(results, ch)
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Name < results[j].Name
+	})
+
+	for _, result := range results {
 		response := &pb.MetaLabelResponse{
 			Name:            result.Name,
 			Namespace:       result.Namespace,

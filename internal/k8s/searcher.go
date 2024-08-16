@@ -65,31 +65,8 @@ func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error
 
 	s.waitUntilCacheSynced()
 
-	// filter by label key or value match with keyword from cache
 	for _, meta := range s.resourceCache {
-		keyHighlights := make(map[string]Highlight)
-		valueHighlights := make(map[string]Highlight)
-
-		for k, v := range meta.Labels {
-			kMatches := fuzzy.Find(keyword, []string{k})
-			vMatches := fuzzy.Find(keyword, []string{v})
-
-			if len(kMatches) > 0 {
-				keyHighlights[k] = Highlight{
-					Indices: convertToPbIndices(kMatches[0]),
-				}
-			}
-
-			if len(vMatches) > 0 {
-				valueHighlights[k] = Highlight{
-					Indices: convertToPbIndices(vMatches[0]),
-				}
-			}
-		}
-
-		if len(keyHighlights) > 0 || len(valueHighlights) > 0 {
-			meta.KeyHighlights = keyHighlights
-			meta.ValueHighlights = valueHighlights
+		if isMatched(keyword, &meta) {
 			stream <- meta
 		}
 	}
@@ -203,4 +180,40 @@ func toPartialObjectMeta(resource *unstructured.Unstructured) PartialObjectMeta 
 		Namespace: resource.GetNamespace(),
 		Labels:    resource.GetLabels(),
 	}
+}
+
+// TODO: extract side effect, update Highlights
+func isMatched(keyword string, pom *PartialObjectMeta) bool {
+	if keyword == "" {
+		return true
+	}
+
+	keyHighlights := make(map[string]Highlight)
+	valueHighlights := make(map[string]Highlight)
+
+	for k, v := range pom.Labels {
+		kMatches := fuzzy.Find(keyword, []string{k})
+		vMatches := fuzzy.Find(keyword, []string{v})
+
+		if len(kMatches) > 0 {
+			keyHighlights[k] = Highlight{
+				Indices: convertToPbIndices(kMatches[0]),
+			}
+		}
+
+		if len(vMatches) > 0 {
+			valueHighlights[k] = Highlight{
+				Indices: convertToPbIndices(vMatches[0]),
+			}
+		}
+	}
+
+	if len(keyHighlights) > 0 || len(valueHighlights) > 0 {
+		pom.KeyHighlights = keyHighlights
+		pom.ValueHighlights = valueHighlights
+
+		return true
+	}
+
+	return false
 }

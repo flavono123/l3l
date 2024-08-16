@@ -1,13 +1,15 @@
 "use client";
 
-import { type MetaLabel, searchLabels } from "@/grpc/client";
+import { type MetaLabel, searchLabels, GVR } from "@/grpc/client";
 import { SearchRequest } from "@/grpc/label_service_pb";
 import { useCallback, useEffect, useState } from "react";
 import {
   AppLayout,
   Badge,
   ColumnLayout,
+  ContentLayout,
   Header,
+  Link,
   SideNavigation,
   SpaceBetween,
   Table,
@@ -17,6 +19,7 @@ import { generateBadgeColor } from "../../utils/color";
 import Hoverable from "@/components/Hoverable";
 import HighlightedText from "@/components/HighlightedText";
 import _ from "lodash";
+import GvrNavigation from "@/components/GvrNavigation";
 
 export default function App() {
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
@@ -27,7 +30,11 @@ export default function App() {
   const [keyHighlight, setKeyHighlight] = useState<{ [key: string]: number[] }>(
     {},
   );
-
+  const [selectedGvr, setSelectedGvr] = useState<GVR>({
+    group: "",
+    version: "",
+    resource: "",
+  } as GVR);
   const debounceSetLoading = useCallback(
     _.debounce((loading: boolean) => {
       setLoading(loading);
@@ -39,10 +46,11 @@ export default function App() {
     const fetchLabels = async () => {
       debounceSetLoading(true);
       try {
+        const { group, version, resource } = selectedGvr;
         const result: MetaLabel[] = await searchLabels({
-          group: "",
-          version: "v1",
-          resource: "nodes",
+          group: group,
+          version: version,
+          resource: resource,
           namespace: "",
           keyword: keyword,
         } as SearchRequest.AsObject);
@@ -60,7 +68,7 @@ export default function App() {
     return () => {
       debounceSetLoading.cancel();
     };
-  }, [keyword, debounceSetLoading]);
+  }, [keyword, debounceSetLoading, selectedGvr]);
 
   const handleMouseEnter = (key: string) => {
     setHoverKey(key);
@@ -75,38 +83,27 @@ export default function App() {
     setHoverKey(null);
   };
 
+  const handleGvrOnFollow = (gvr: GVR) => {
+    setSelectedGvr(gvr);
+  };
+
+  const headerText = ({ group, version, resource }: GVR): string => {
+    if (group === "" && version === "" && resource === "") {
+      return "Select a resource";
+    }
+
+    if (group === "") {
+      return `${resource}(${version})`;
+    } else {
+      return `${resource}(${[group, version].join("/")})`;
+    }
+  };
+
   return (
     <div>
       <AppLayout
         navigationOpen={true}
-        navigation={
-          // TODO: current items should be in a column layout
-          <SideNavigation
-            header={{ text: "Labels keys", href: "#" }}
-            items={labelKeys.map((key) => ({
-              key: key,
-              type: "link",
-              text: "",
-              href: "#",
-              info: (
-                <Hoverable
-                  key={key}
-                  keyName={key}
-                  hoverKey={hoverKey}
-                  handleMouseEnter={handleMouseEnter}
-                  handleMouseLeave={handleMouseLeave}
-                >
-                  <Badge color={generateBadgeColor(key)}>
-                    <HighlightedText
-                      text={key}
-                      indices={keyHighlight[key] || []}
-                    />
-                  </Badge>
-                </Hoverable>
-              ),
-            }))}
-          />
-        }
+        navigation={<GvrNavigation handleGvrOnFollow={handleGvrOnFollow} />}
         contentType="table"
         content={
           <>
@@ -116,7 +113,7 @@ export default function App() {
                   counter={`${metaLabels.length}`}
                   description="Label values"
                 >
-                  Resources
+                  {headerText(selectedGvr)}
                 </Header>
               }
               filter={
@@ -141,7 +138,7 @@ export default function App() {
                   id: "labels",
                   header: "Labels",
                   cell: (item: MetaLabel) => (
-                    <ColumnLayout columns={10} borders="horizontal">
+                    <ColumnLayout columns={100} borders="horizontal">
                       <SpaceBetween direction="horizontal" size="xxs">
                         {Object.entries(item.labels).map(([key, value]) => (
                           <Hoverable
@@ -171,6 +168,50 @@ export default function App() {
               wrapLines={true}
             />
           </>
+        }
+        toolsOpen={true}
+        // TODO: find proper items iterable component than side nav
+        tools={
+          <ContentLayout
+            breadcrumbs="WORKINPROCESS"
+            header={
+              <SpaceBetween size="m">
+                <Header
+                  variant="h3"
+                  info={<Link variant="info">Info</Link>}
+                  description="All key matched by keyword to keys or values"
+                >
+                  Label Keys
+                </Header>
+              </SpaceBetween>
+            }
+          >
+            <SideNavigation
+              header={{ text: "Labels keys", href: "#" }}
+              items={labelKeys.map((key) => ({
+                key: key,
+                type: "link",
+                text: "",
+                href: "#",
+                info: (
+                  <Hoverable
+                    key={key}
+                    keyName={key}
+                    hoverKey={hoverKey}
+                    handleMouseEnter={handleMouseEnter}
+                    handleMouseLeave={handleMouseLeave}
+                  >
+                    <Badge color={generateBadgeColor(key)}>
+                      <HighlightedText
+                        text={key}
+                        indices={keyHighlight[key] || []}
+                      />
+                    </Badge>
+                  </Hoverable>
+                ),
+              }))}
+            />
+          </ContentLayout>
         }
       ></AppLayout>
     </div>

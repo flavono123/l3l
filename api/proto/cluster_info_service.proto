@@ -6,18 +6,21 @@ option go_package = "github.com/flavono123/l3l/api/pb;api";
 
 service ClusterInfoService {
   rpc GetClusterInfo (ClusterInfoRequest) returns (ClusterInfoResponse);
+  rpc ListGroupVersionResources (GroupVersionResourceRequest) returns (stream GroupVersionResourceResponse);
 }
 
 message ClusterInfoRequest {
 }
 
+message GroupVersionResourceRequest {
+}
+
 message ClusterInfoResponse {
   string current_context = 1;
   repeated string namespaces = 2;
-  repeated GroupVersionResource gvrs = 3;
 }
 
-message GroupVersionResource {
+message GroupVersionResourceResponse {
   string group = 1;
   string version = 2;
   string resource = 3;

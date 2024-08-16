@@ -82,5 +82,27 @@ export class ClusterInfoServiceClient {
     this.methodDescriptorGetClusterInfo);
   }
 
+  methodDescriptorListGroupVersionResources = new grpcWeb.MethodDescriptor(
+    '/api.ClusterInfoService/ListGroupVersionResources',
+    grpcWeb.MethodType.SERVER_STREAMING,
+    cluster_info_service_pb.GroupVersionResourceRequest,
+    cluster_info_service_pb.GroupVersionResourceResponse,
+    (request: cluster_info_service_pb.GroupVersionResourceRequest) => {
+      return request.serializeBinary();
+    },
+    cluster_info_service_pb.GroupVersionResourceResponse.deserializeBinary
+  );
+
+  listGroupVersionResources(
+    request: cluster_info_service_pb.GroupVersionResourceRequest,
+    metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<cluster_info_service_pb.GroupVersionResourceResponse> {
+    return this.client_.serverStreaming(
+      this.hostname_ +
+        '/api.ClusterInfoService/ListGroupVersionResources',
+      request,
+      metadata || {},
+      this.methodDescriptorListGroupVersionResources);
+  }
+
 }
 

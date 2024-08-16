@@ -1,9 +1,8 @@
 import { ClusterInfoServiceClient } from "./Cluster_info_serviceServiceClientPb";
 import { LabelServiceClient } from "./Label_serviceServiceClientPb";
 import {
-  ClusterInfoRequest,
-  ClusterInfoResponse,
-  GroupVersionResource,
+  GroupVersionResourceRequest,
+  GroupVersionResourceResponse,
 } from "./cluster_info_service_pb";
 import {
   MetaLabelResponse,
@@ -102,34 +101,23 @@ export type ClusterInfo = {
   gvrs: GVR[];
 };
 
-export async function getClusterInfo(): Promise<ClusterInfo> {
+export async function listGroupVersionResources(): Promise<GVR[]> {
   return new Promise((resolve, reject) => {
-    const request = new ClusterInfoRequest();
+    const request = new GroupVersionResourceRequest();
 
-    clusterInfoClient.getClusterInfo(
-      request,
-      {},
-      (err, response: ClusterInfoResponse) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+    const stream = clusterInfoClient.listGroupVersionResources(request, {});
+    const gvrs: GVR[] = [];
 
-        const { currentContext, namespacesList, gvrsList } =
-          response.toObject();
+    stream.on("data", (response: GroupVersionResourceResponse) => {
+      gvrs.push(response.toObject() as GroupVersionResourceResponse.AsObject);
+    });
 
-        const gvrs = gvrsList.map((gvr: GroupVersionResource.AsObject) => ({
-          group: gvr.group,
-          version: gvr.version,
-          resource: gvr.resource,
-        }));
+    stream.on("end", () => {
+      resolve(gvrs);
+    });
 
-        resolve({
-          currentContext,
-          namespaces: namespacesList,
-          gvrs,
-        });
-      },
-    );
+    stream.on("error", (err) => {
+      reject(err);
+    });
   });
 }

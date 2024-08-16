@@ -86,25 +86,30 @@ func (s *server) GetClusterInfo(ctx context.Context, req *pb.ClusterInfoRequest)
 		return nil, err
 	}
 
-	gvrList, err := s.retriever.GetGVRs()
-	if err != nil {
-		return nil, err
-	}
-
-	var gvrs []*pb.GroupVersionResource
-	for _, gvr := range gvrList {
-		gvrs = append(gvrs, &pb.GroupVersionResource{
-			Group:    gvr.Group,
-			Version:  gvr.Version,
-			Resource: gvr.Resource,
-		})
-	}
-
 	return &pb.ClusterInfoResponse{
 		CurrentContext: "todo",
 		Namespaces:     namespaces,
-		Gvrs:           gvrs,
 	}, nil
+}
+
+func (s *server) ListGroupVersionResources(req *pb.GroupVersionResourceRequest, stream pb.ClusterInfoService_ListGroupVersionResourcesServer) error {
+	gvrs, err := s.retriever.GetGVRs()
+	if err != nil {
+		return err
+	}
+
+	for _, gvr := range gvrs {
+		response := &pb.GroupVersionResourceResponse{
+			Group:    gvr.Group,
+			Version:  gvr.Version,
+			Resource: gvr.Resource,
+		}
+		if err := stream.Send(response); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *server) getSearcher(req *pb.SearchRequest) *k8s.Searcher {

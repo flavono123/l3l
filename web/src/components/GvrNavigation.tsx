@@ -1,4 +1,4 @@
-import { type GVR, type ClusterInfo, getClusterInfo } from "@/grpc/client";
+import { type GVR, listGroupVersionResources } from "@/grpc/client";
 import { SideNavigation } from "@cloudscape-design/components";
 import { useEffect, useState } from "react";
 import _ from "lodash";
@@ -10,22 +10,16 @@ interface GvrNavigationProps {
 export default function GvrNavigation({
   handleGvrOnFollow,
 }: GvrNavigationProps) {
-  const [clusterInfo, setClusterInfo] = useState<ClusterInfo>({
-    currentContext: "",
-    gvrs: [] as unknown as GVR,
-    namespaces: [],
-  } as unknown as ClusterInfo);
   const [resourcesByGroupVersion, setResourcesByGroupVersion] = useState<{
     [key: string]: GVR[];
   }>({});
 
   useEffect(() => {
-    const fetchClusterInfo = async () => {
+    const fetchGVRs = async () => {
       try {
-        const result: ClusterInfo = await getClusterInfo();
-        setClusterInfo(result);
+        const result: GVR[] = await listGroupVersionResources();
         setResourcesByGroupVersion(
-          _.groupBy(result.gvrs, (gvr: GVR) =>
+          _.groupBy(result, (gvr: GVR) =>
             gvr.group === ""
               ? `core/${gvr.version}`
               : `${gvr.group}/${gvr.version}`,
@@ -36,7 +30,7 @@ export default function GvrNavigation({
       }
     };
 
-    fetchClusterInfo();
+    fetchGVRs();
     // group gvrs by group-version
   }, []);
 
@@ -54,6 +48,7 @@ export default function GvrNavigation({
         })),
       }))}
       onFollow={({ detail }) => {
+        // HACK: parsing href is a hack itself
         if (detail.type !== "link") {
           return;
         }

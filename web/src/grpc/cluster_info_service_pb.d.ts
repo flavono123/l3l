@@ -16,6 +16,20 @@ export namespace ClusterInfoRequest {
   }
 }
 
+export class GroupVersionResourceRequest extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GroupVersionResourceRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GroupVersionResourceRequest): GroupVersionResourceRequest.AsObject;
+  static serializeBinaryToWriter(message: GroupVersionResourceRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GroupVersionResourceRequest;
+  static deserializeBinaryFromReader(message: GroupVersionResourceRequest, reader: jspb.BinaryReader): GroupVersionResourceRequest;
+}
+
+export namespace GroupVersionResourceRequest {
+  export type AsObject = {
+  }
+}
+
 export class ClusterInfoResponse extends jspb.Message {
   getCurrentContext(): string;
   setCurrentContext(value: string): ClusterInfoResponse;
@@ -24,11 +38,6 @@ export class ClusterInfoResponse extends jspb.Message {
   setNamespacesList(value: Array<string>): ClusterInfoResponse;
   clearNamespacesList(): ClusterInfoResponse;
   addNamespaces(value: string, index?: number): ClusterInfoResponse;
-
-  getGvrsList(): Array<GroupVersionResource>;
-  setGvrsList(value: Array<GroupVersionResource>): ClusterInfoResponse;
-  clearGvrsList(): ClusterInfoResponse;
-  addGvrs(value?: GroupVersionResource, index?: number): GroupVersionResource;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ClusterInfoResponse.AsObject;
@@ -42,29 +51,28 @@ export namespace ClusterInfoResponse {
   export type AsObject = {
     currentContext: string,
     namespacesList: Array<string>,
-    gvrsList: Array<GroupVersionResource.AsObject>,
   }
 }
 
-export class GroupVersionResource extends jspb.Message {
+export class GroupVersionResourceResponse extends jspb.Message {
   getGroup(): string;
-  setGroup(value: string): GroupVersionResource;
+  setGroup(value: string): GroupVersionResourceResponse;
 
   getVersion(): string;
-  setVersion(value: string): GroupVersionResource;
+  setVersion(value: string): GroupVersionResourceResponse;
 
   getResource(): string;
-  setResource(value: string): GroupVersionResource;
+  setResource(value: string): GroupVersionResourceResponse;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): GroupVersionResource.AsObject;
-  static toObject(includeInstance: boolean, msg: GroupVersionResource): GroupVersionResource.AsObject;
-  static serializeBinaryToWriter(message: GroupVersionResource, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): GroupVersionResource;
-  static deserializeBinaryFromReader(message: GroupVersionResource, reader: jspb.BinaryReader): GroupVersionResource;
+  toObject(includeInstance?: boolean): GroupVersionResourceResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: GroupVersionResourceResponse): GroupVersionResourceResponse.AsObject;
+  static serializeBinaryToWriter(message: GroupVersionResourceResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GroupVersionResourceResponse;
+  static deserializeBinaryFromReader(message: GroupVersionResourceResponse, reader: jspb.BinaryReader): GroupVersionResourceResponse;
 }
 
-export namespace GroupVersionResource {
+export namespace GroupVersionResourceResponse {
   export type AsObject = {
     group: string,
     version: string,

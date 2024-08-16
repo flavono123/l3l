@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ClusterInfoService_GetClusterInfo_FullMethodName = "/api.ClusterInfoService/GetClusterInfo"
+	ClusterInfoService_GetClusterInfo_FullMethodName            = "/api.ClusterInfoService/GetClusterInfo"
+	ClusterInfoService_ListGroupVersionResources_FullMethodName = "/api.ClusterInfoService/ListGroupVersionResources"
 )
 
 // ClusterInfoServiceClient is the client API for ClusterInfoService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ClusterInfoServiceClient interface {
 	GetClusterInfo(ctx context.Context, in *ClusterInfoRequest, opts ...grpc.CallOption) (*ClusterInfoResponse, error)
+	ListGroupVersionResources(ctx context.Context, in *GroupVersionResourceRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GroupVersionResourceResponse], error)
 }
 
 type clusterInfoServiceClient struct {
@@ -47,11 +49,31 @@ func (c *clusterInfoServiceClient) GetClusterInfo(ctx context.Context, in *Clust
 	return out, nil
 }
 
+func (c *clusterInfoServiceClient) ListGroupVersionResources(ctx context.Context, in *GroupVersionResourceRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GroupVersionResourceResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &ClusterInfoService_ServiceDesc.Streams[0], ClusterInfoService_ListGroupVersionResources_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GroupVersionResourceRequest, GroupVersionResourceResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ClusterInfoService_ListGroupVersionResourcesClient = grpc.ServerStreamingClient[GroupVersionResourceResponse]
+
 // ClusterInfoServiceServer is the server API for ClusterInfoService service.
 // All implementations must embed UnimplementedClusterInfoServiceServer
 // for forward compatibility.
 type ClusterInfoServiceServer interface {
 	GetClusterInfo(context.Context, *ClusterInfoRequest) (*ClusterInfoResponse, error)
+	ListGroupVersionResources(*GroupVersionResourceRequest, grpc.ServerStreamingServer[GroupVersionResourceResponse]) error
 	mustEmbedUnimplementedClusterInfoServiceServer()
 }
 
@@ -64,6 +86,9 @@ type UnimplementedClusterInfoServiceServer struct{}
 
 func (UnimplementedClusterInfoServiceServer) GetClusterInfo(context.Context, *ClusterInfoRequest) (*ClusterInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClusterInfo not implemented")
+}
+func (UnimplementedClusterInfoServiceServer) ListGroupVersionResources(*GroupVersionResourceRequest, grpc.ServerStreamingServer[GroupVersionResourceResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method ListGroupVersionResources not implemented")
 }
 func (UnimplementedClusterInfoServiceServer) mustEmbedUnimplementedClusterInfoServiceServer() {}
 func (UnimplementedClusterInfoServiceServer) testEmbeddedByValue()                            {}
@@ -104,6 +129,17 @@ func _ClusterInfoService_GetClusterInfo_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterInfoService_ListGroupVersionResources_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GroupVersionResourceRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ClusterInfoServiceServer).ListGroupVersionResources(m, &grpc.GenericServerStream[GroupVersionResourceRequest, GroupVersionResourceResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ClusterInfoService_ListGroupVersionResourcesServer = grpc.ServerStreamingServer[GroupVersionResourceResponse]
+
 // ClusterInfoService_ServiceDesc is the grpc.ServiceDesc for ClusterInfoService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +152,12 @@ var ClusterInfoService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterInfoService_GetClusterInfo_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ListGroupVersionResources",
+			Handler:       _ClusterInfoService_ListGroupVersionResources_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "cluster_info_service.proto",
 }

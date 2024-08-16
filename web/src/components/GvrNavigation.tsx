@@ -31,7 +31,6 @@ export default function GvrNavigation({
               : `${gvr.group}/${gvr.version}`,
           ),
         );
-        console.log(resourcesByGroupVersion);
       } catch (error) {
         console.error(error);
       }
@@ -59,7 +58,6 @@ export default function GvrNavigation({
           return;
         }
         const [group, version, resource] = detail.href.slice(1).split("/");
-        console.log(`select: ${group}, ${version}, ${resource}`);
         handleGvrOnFollow({ group, version, resource });
       }}
     />

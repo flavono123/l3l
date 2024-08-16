@@ -81,7 +81,6 @@ export async function searchLabels({
     });
 
     stream.on("end", () => {
-      console.log("searchLabels response:", metaLabels);
       resolve(metaLabels);
     });
 

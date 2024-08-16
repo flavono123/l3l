@@ -188,32 +188,32 @@ func isMatched(keyword string, pom *PartialObjectMeta) bool {
 		return true
 	}
 
+	updateHighlights(keyword, pom)
+
+	if len(pom.KeyHighlights) > 0 || len(pom.ValueHighlights) > 0 {
+		return true
+	}
+
+	return false
+}
+
+func updateHighlights(keyword string, pom *PartialObjectMeta) {
 	keyHighlights := make(map[string]Highlight)
 	valueHighlights := make(map[string]Highlight)
-
 	for k, v := range pom.Labels {
 		kMatches := fuzzy.Find(keyword, []string{k})
 		vMatches := fuzzy.Find(keyword, []string{v})
-
 		if len(kMatches) > 0 {
 			keyHighlights[k] = Highlight{
 				Indices: convertToPbIndices(kMatches[0]),
 			}
 		}
-
 		if len(vMatches) > 0 {
 			valueHighlights[k] = Highlight{
 				Indices: convertToPbIndices(vMatches[0]),
 			}
 		}
 	}
-
-	if len(keyHighlights) > 0 || len(valueHighlights) > 0 {
-		pom.KeyHighlights = keyHighlights
-		pom.ValueHighlights = valueHighlights
-
-		return true
-	}
-
-	return false
+	pom.KeyHighlights = keyHighlights
+	pom.ValueHighlights = valueHighlights
 }

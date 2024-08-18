@@ -50,7 +50,7 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 		defer close(channel)
 
 		log.Printf("Starting search for keyword: %s\n", req.Keyword)
-		if err := searcher.Search(req.Keyword, channel); err != nil {
+		if err := searcher.Search(req.Namespace, req.Keyword, channel); err != nil {
 			panic(err)
 		}
 	}()
@@ -72,7 +72,6 @@ func (s *server) SearchLabels(req *pb.SearchRequest, stream pb.LabelService_Sear
 			KeyHighlights:   convertToPbHighlightMap(result.KeyHighlights),
 			ValueHighlights: convertToPbHighlightMap(result.ValueHighlights),
 		}
-		log.Printf("Sending response: %+v\n", response)
 		if err := stream.Send(response); err != nil {
 			panic(err)
 		}
@@ -113,7 +112,7 @@ func (s *server) ListGroupVersionResources(req *pb.GroupVersionResourceRequest, 
 }
 
 func (s *server) getSearcher(req *pb.SearchRequest) *k8s.Searcher {
-	key := searcherKey(req.Group, req.Version, req.Resource, req.Namespace)
+	key := searcherKey(req.Group, req.Version, req.Resource)
 	searcher, ok := s.searchers[key]
 	if !ok {
 		log.Printf("Creating new searcher for key: %s\n", key)
@@ -129,7 +128,6 @@ func (s *server) getSearcher(req *pb.SearchRequest) *k8s.Searcher {
 				Version:  req.Version,
 				Resource: req.Resource,
 			},
-			req.Namespace,
 		)
 
 		log.Printf("Watching resources for key: %s\n", key)
@@ -141,8 +139,8 @@ func (s *server) getSearcher(req *pb.SearchRequest) *k8s.Searcher {
 	return searcher
 }
 
-func searcherKey(group, version, resource, namespace string) string {
-	return fmt.Sprintf("%s:%s:%s:%s", group, version, resource, namespace)
+func searcherKey(group, version, resource string) string {
+	return fmt.Sprintf("%s:%s:%s", group, version, resource)
 }
 
 func getClient() (dynamic.Interface, error) {

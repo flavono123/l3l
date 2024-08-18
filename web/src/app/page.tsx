@@ -80,7 +80,7 @@ export default function App() {
           group: group,
           version: version,
           resource: resource,
-          namespace: "",
+          namespace: selectedNamespace.value,
           keyword: keyword,
         } as SearchRequest.AsObject);
         setMetaLabels(result);
@@ -97,7 +97,7 @@ export default function App() {
     return () => {
       debounceSetLoading.cancel();
     };
-  }, [keyword, debounceSetLoading, selectedGvr]);
+  }, [keyword, debounceSetLoading, selectedGvr, selectedNamespace]);
 
   const handleMouseEnter = (key: string) => {
     setHoverKey(key);

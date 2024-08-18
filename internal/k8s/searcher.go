@@ -29,9 +29,8 @@ type PartialObjectMeta struct {
 }
 
 type Searcher struct { // TODO: optimize paddings
-	client    dynamic.Interface
-	gvr       schema.GroupVersionResource
-	namespace string
+	client dynamic.Interface
+	gvr    schema.GroupVersionResource
 	// cache
 	resourceCache  map[string]PartialObjectMeta // Name, Namespace, Labels만 쓰인다
 	cacheMutex     sync.Mutex
@@ -43,12 +42,11 @@ type Searcher struct { // TODO: optimize paddings
 }
 
 // constructor
-func NewSearcher(client dynamic.Interface, gvr schema.GroupVersionResource, namespace string) *Searcher {
+func NewSearcher(client dynamic.Interface, gvr schema.GroupVersionResource) *Searcher {
 	ctx, cancel := context.WithCancel(context.Background())
 	searcher := &Searcher{
 		client:        client,
 		gvr:           gvr,
-		namespace:     namespace,
 		resourceCache: make(map[string]PartialObjectMeta),
 		ctx:           ctx,
 		cancel:        cancel,
@@ -59,14 +57,14 @@ func NewSearcher(client dynamic.Interface, gvr schema.GroupVersionResource, name
 
 // methods
 // public
-func (s *Searcher) Search(keyword string, stream chan<- PartialObjectMeta) error {
+func (s *Searcher) Search(namespace, keyword string, stream chan<- PartialObjectMeta) error {
 	s.cacheMutex.Lock()
 	defer s.cacheMutex.Unlock()
 
 	s.waitUntilCacheSynced()
 
 	for _, meta := range s.resourceCache {
-		if isMatched(keyword, &meta) {
+		if isMatched(keyword, &meta) && (namespace == "" || namespace == meta.Namespace) {
 			stream <- meta
 		}
 	}
@@ -88,12 +86,13 @@ func (s *Searcher) Stop() {
 
 // private
 func (s *Searcher) watchResources(ctx context.Context) error {
+	// watch resources in all namespace and filter in search
 	lw := &cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return s.client.Resource(s.gvr).Namespace(s.namespace).List(context.Background(), options)
+			return s.client.Resource(s.gvr).Namespace("").List(context.Background(), options)
 		},
 		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return s.client.Resource(s.gvr).Namespace(s.namespace).Watch(context.Background(), options)
+			return s.client.Resource(s.gvr).Namespace("").Watch(context.Background(), options)
 		},
 	}
 

@@ -1,10 +1,10 @@
 "use client";
 
 import {
+  type ClusterInfo,
+  type GVRInfo,
   type MetaLabel,
   searchLabels,
-  GVR,
-  ClusterInfo,
   getClusterInfo,
 } from "@/grpc/client";
 import { SearchRequest } from "@/grpc/label_service_pb";
@@ -39,17 +39,18 @@ export default function App() {
   const [keyHighlight, setKeyHighlight] = useState<{ [key: string]: number[] }>(
     {},
   );
-  const [selectedGvr, setSelectedGvr] = useState<GVR>({
+  const [selectedGvrInfo, setSelectedGvrInfo] = useState<GVRInfo>({
     group: "",
     version: "",
     resource: "",
-  } as GVR);
+    namespaced: false,
+  } as GVRInfo);
   const [namespaces, setNamespaces] = useState<string[]>([]);
   const defaultSelectedNamespace: SelectProps.Option = {
     label: "All namespaces",
     value: "",
   };
-  const [selectedNamespace, setSelectedNamespace] =
+  const [selectedNamespaceOption, setSelectedNamespaceOption] =
     useState<SelectProps.Option>(defaultSelectedNamespace);
 
   const debounceSetLoading = useCallback(
@@ -75,12 +76,16 @@ export default function App() {
     const fetchLabels = async () => {
       debounceSetLoading(true);
       try {
-        const { group, version, resource } = selectedGvr;
+        const { group, version, resource, namespaced } = selectedGvrInfo;
+        const currentNamespace = namespaced
+          ? (selectedNamespaceOption.value as string)
+          : (defaultSelectedNamespace.value as string);
+        console.log(`request with ${currentNamespace}`);
         const result: MetaLabel[] = await searchLabels({
           group: group,
           version: version,
           resource: resource,
-          namespace: selectedNamespace.value,
+          namespace: currentNamespace,
           keyword: keyword,
         } as SearchRequest.AsObject);
         setMetaLabels(result);
@@ -97,26 +102,21 @@ export default function App() {
     return () => {
       debounceSetLoading.cancel();
     };
-  }, [keyword, debounceSetLoading, selectedGvr, selectedNamespace]);
+  }, [keyword, debounceSetLoading, selectedNamespaceOption, selectedGvrInfo]);
 
   const handleMouseEnter = (key: string) => {
     setHoverKey(key);
-    // HACK: maybe required with transitions
-    // setLabelKeys((prevKeys) => {
-    //   const newKeys = prevKeys.filter((k) => k !== key);
-    //   return [key, ...newKeys];
-    // });
   };
 
   const handleMouseLeave = () => {
     setHoverKey(null);
   };
 
-  const handleGvrOnFollow = (gvr: GVR) => {
-    setSelectedGvr(gvr);
+  const handleGvrInfoOnFollow = (gvrInfo: GVRInfo) => {
+    setSelectedGvrInfo(gvrInfo);
   };
 
-  const headerText = ({ group, version, resource }: GVR): string => {
+  const headerText = ({ group, version, resource }: GVRInfo): string => {
     if (group === "" && version === "" && resource === "") {
       return "Select a resource";
     }
@@ -132,7 +132,9 @@ export default function App() {
     <div>
       <AppLayout
         navigationOpen={true}
-        navigation={<GvrNavigation handleGvrOnFollow={handleGvrOnFollow} />}
+        navigation={
+          <GvrNavigation handleGvrInfoOnFollow={handleGvrInfoOnFollow} />
+        }
         contentType="table"
         content={
           <>
@@ -142,25 +144,27 @@ export default function App() {
                   counter={`${metaLabels.length}`}
                   description="Label values"
                   actions={
-                    <Select
-                      selectedOption={selectedNamespace}
-                      onChange={({
-                        detail,
-                      }: {
-                        detail: SelectProps.ChangeDetail;
-                      }) => {
-                        setSelectedNamespace(detail.selectedOption);
-                      }}
-                      options={[defaultSelectedNamespace].concat(
-                        namespaces.map((namespace) => ({
-                          label: namespace,
-                          value: namespace,
-                        })),
-                      )}
-                    />
+                    selectedGvrInfo.namespaced ? (
+                      <Select
+                        selectedOption={selectedNamespaceOption}
+                        onChange={({
+                          detail,
+                        }: {
+                          detail: SelectProps.ChangeDetail;
+                        }) => {
+                          setSelectedNamespaceOption(detail.selectedOption);
+                        }}
+                        options={[defaultSelectedNamespace].concat(
+                          namespaces.map((namespace) => ({
+                            label: namespace,
+                            value: namespace,
+                          })),
+                        )}
+                      />
+                    ) : null
                   }
                 >
-                  {headerText(selectedGvr)}
+                  {headerText(selectedGvrInfo)}
                 </Header>
               }
               filter={

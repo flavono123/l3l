@@ -24,5 +24,6 @@ message GroupVersionResourceResponse {
   string group = 1;
   string version = 2;
   string resource = 3;
+  bool namespaced = 4;
 }
 

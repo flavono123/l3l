@@ -91,18 +91,21 @@ export async function searchLabels({
   });
 }
 
-export type GVR = {
+export type GVRInfo = {
   group: string;
   version: string;
   resource: string;
+  namespaced: boolean;
 };
 
-export async function listGroupVersionResources(): Promise<GVR[]> {
+export type GVR = Omit<GVRInfo, "namespaced">;
+
+export async function listGroupVersionResources(): Promise<GVRInfo[]> {
   return new Promise((resolve, reject) => {
     const request = new GroupVersionResourceRequest();
 
     const stream = clusterInfoClient.listGroupVersionResources(request, {});
-    const gvrs: GVR[] = [];
+    const gvrs: GVRInfo[] = [];
 
     stream.on("data", (response: GroupVersionResourceResponse) => {
       gvrs.push(response.toObject() as GroupVersionResourceResponse.AsObject);

@@ -531,7 +531,8 @@ proto.api.GroupVersionResourceResponse.toObject = function(includeInstance, msg)
   var f, obj = {
     group: jspb.Message.getFieldWithDefault(msg, 1, ""),
     version: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    resource: jspb.Message.getFieldWithDefault(msg, 3, "")
+    resource: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    namespaced: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
   };
 
   if (includeInstance) {
@@ -580,6 +581,10 @@ proto.api.GroupVersionResourceResponse.deserializeBinaryFromReader = function(ms
       var value = /** @type {string} */ (reader.readString());
       msg.setResource(value);
       break;
+    case 4:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setNamespaced(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -627,6 +632,13 @@ proto.api.GroupVersionResourceResponse.serializeBinaryToWriter = function(messag
   if (f.length > 0) {
     writer.writeString(
       3,
+      f
+    );
+  }
+  f = message.getNamespaced();
+  if (f) {
+    writer.writeBool(
+      4,
       f
     );
   }
@@ -684,6 +696,24 @@ proto.api.GroupVersionResourceResponse.prototype.getResource = function() {
  */
 proto.api.GroupVersionResourceResponse.prototype.setResource = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional bool namespaced = 4;
+ * @return {boolean}
+ */
+proto.api.GroupVersionResourceResponse.prototype.getNamespaced = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.api.GroupVersionResourceResponse} returns this
+ */
+proto.api.GroupVersionResourceResponse.prototype.setNamespaced = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 

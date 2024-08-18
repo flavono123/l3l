@@ -92,16 +92,17 @@ func (s *server) GetClusterInfo(ctx context.Context, req *pb.ClusterInfoRequest)
 }
 
 func (s *server) ListGroupVersionResources(req *pb.GroupVersionResourceRequest, stream pb.ClusterInfoService_ListGroupVersionResourcesServer) error {
-	gvrs, err := s.retriever.GetGVRs()
+	gvrInfos, err := s.retriever.GetGVRInfos()
 	if err != nil {
 		return err
 	}
 
-	for _, gvr := range gvrs {
+	for _, gvrInfo := range gvrInfos {
 		response := &pb.GroupVersionResourceResponse{
-			Group:    gvr.Group,
-			Version:  gvr.Version,
-			Resource: gvr.Resource,
+			Group:      gvrInfo.GVR.Group,
+			Version:    gvrInfo.GVR.Version,
+			Resource:   gvrInfo.GVR.Resource,
+			Namespaced: gvrInfo.Namespaced,
 		}
 		if err := stream.Send(response); err != nil {
 			return err

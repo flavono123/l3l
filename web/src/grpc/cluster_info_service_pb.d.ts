@@ -64,6 +64,9 @@ export class GroupVersionResourceResponse extends jspb.Message {
   getResource(): string;
   setResource(value: string): GroupVersionResourceResponse;
 
+  getNamespaced(): boolean;
+  setNamespaced(value: boolean): GroupVersionResourceResponse;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GroupVersionResourceResponse.AsObject;
   static toObject(includeInstance: boolean, msg: GroupVersionResourceResponse): GroupVersionResourceResponse.AsObject;
@@ -77,6 +80,7 @@ export namespace GroupVersionResourceResponse {
     group: string,
     version: string,
     resource: string,
+    namespaced: boolean,
   }
 }
 

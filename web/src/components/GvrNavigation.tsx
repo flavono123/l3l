@@ -1,4 +1,4 @@
-import { type GVR, listGroupVersionResources } from "@/grpc/client";
+import { type GVRInfo, listGroupVersionResources } from "@/grpc/client";
 import {
   SideNavigation,
   type SideNavigationProps,
@@ -7,22 +7,22 @@ import { useEffect, useState } from "react";
 import _ from "lodash";
 
 interface GvrNavigationProps {
-  handleGvrOnFollow: (gvr: GVR) => void;
+  handleGvrInfoOnFollow: (gvrInfo: GVRInfo) => void;
 }
 
 export default function GvrNavigation({
-  handleGvrOnFollow,
+  handleGvrInfoOnFollow,
 }: GvrNavigationProps) {
   const [resourcesByGroupVersion, setResourcesByGroupVersion] = useState<{
-    [key: string]: GVR[];
+    [key: string]: GVRInfo[];
   }>({});
 
   useEffect(() => {
     const fetchGVRs = async () => {
       try {
-        const result: GVR[] = await listGroupVersionResources();
+        const result: GVRInfo[] = await listGroupVersionResources();
         setResourcesByGroupVersion(
-          _.groupBy(result, (gvr: GVR) =>
+          _.groupBy(result, (gvr: GVRInfo) =>
             gvr.group === ""
               ? `core/${gvr.version}`
               : `${gvr.group}/${gvr.version}`,
@@ -47,16 +47,22 @@ export default function GvrNavigation({
         items: resourcesByGroupVersion[groupVersion].map((gvr) => ({
           type: "link",
           text: gvr.resource,
-          href: `#${gvr.group}/${gvr.version}/${gvr.resource}`,
+          href: `#${gvr.group}/${gvr.version}/${gvr.resource}${gvr.namespaced ? "@" : ""}` as string,
         })),
       }))}
       onFollow={({ detail }: { detail: SideNavigationProps.FollowDetail }) => {
-        // HACK: parsing href is a hack itself
         if (detail.type !== "link") {
           return;
         }
-        const [group, version, resource] = detail.href.slice(1).split("/");
-        handleGvrOnFollow({ group, version, resource });
+        // HACK: parsing href is a hack itself
+        // e.g. "#/v1/nodes" or "#/apps/v1/deployments@"
+        const namespaced = detail.href.includes("@");
+        const groupVersionResource = namespaced
+          ? detail.href.slice(1, -1)
+          : detail.href.slice(1);
+        const [group, version, resource] = groupVersionResource.split("/");
+        console.log({ group, version, resource, namespaced });
+        handleGvrInfoOnFollow({ group, version, resource, namespaced });
       }}
     />
   );

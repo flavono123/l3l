@@ -18,6 +18,11 @@ type Retriever struct {
 	discoveryClient     discovery.DiscoveryInterface
 }
 
+type GVRInfo struct {
+	GVR        schema.GroupVersionResource
+	Namespaced bool
+}
+
 func NewRetriever(config *rest.Config) *Retriever {
 	kubernetesClientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -53,14 +58,14 @@ func (g *Retriever) GetNamespaces() ([]string, error) {
 	return namespaces, nil
 }
 
-func (g *Retriever) GetGVRs() ([]schema.GroupVersionResource, error) {
+func (g *Retriever) GetGVRInfos() ([]GVRInfo, error) {
 	apiResourceLists, err := g.discoveryClient.ServerPreferredResources()
 	if err != nil {
 		log.Fatalf("Error getting server resources: %v", err)
 		return nil, err
 	}
 
-	var gvrList []schema.GroupVersionResource
+	var gvrInfos []GVRInfo
 	for _, apiResourceList := range apiResourceLists {
 		groupVersion, err := schema.ParseGroupVersion(apiResourceList.GroupVersion)
 		if err != nil {
@@ -68,17 +73,20 @@ func (g *Retriever) GetGVRs() ([]schema.GroupVersionResource, error) {
 		}
 
 		for _, apiResource := range apiResourceList.APIResources {
-			gvrList = append(gvrList, groupVersion.WithResource(apiResource.Name))
+			gvrInfos = append(gvrInfos, GVRInfo{
+				GVR:        groupVersion.WithResource(apiResource.Name),
+				Namespaced: apiResource.Namespaced,
+			})
 		}
 	}
 
-	g.sortGVRs(gvrList)
+	g.sortGVRs(gvrInfos)
 
-	return gvrList, nil
+	return gvrInfos, nil
 }
 
-func (g *Retriever) sortGVRs(gvrList []schema.GroupVersionResource) {
-	sort.Slice(gvrList, func(i, j int) bool {
-		return gvrList[i].String() < gvrList[j].String()
+func (g *Retriever) sortGVRs(gvrInfos []GVRInfo) {
+	sort.Slice(gvrInfos, func(i, j int) bool {
+		return gvrInfos[i].GVR.String() < gvrInfos[j].GVR.String()
 	})
 }

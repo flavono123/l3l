@@ -12,13 +12,13 @@ import { useCallback, useEffect, useState } from "react";
 import {
   AppLayout,
   Badge,
+  BreadcrumbGroup,
+  type BreadcrumbGroupProps,
   ColumnLayout,
   ContentLayout,
   Header,
-  Link,
   Select,
   type SelectProps,
-  SideNavigation,
   SpaceBetween,
   Table,
   TextFilter,
@@ -52,6 +52,7 @@ export default function App() {
   };
   const [selectedNamespaceOption, setSelectedNamespaceOption] =
     useState<SelectProps.Option>(defaultSelectedNamespace);
+  const [navItems, setNavItems] = useState<BreadcrumbGroupProps.Item[]>([]);
 
   const debounceSetLoading = useCallback(
     _.debounce((loading: boolean) => {
@@ -114,6 +115,16 @@ export default function App() {
 
   const handleGvrInfoOnFollow = (gvrInfo: GVRInfo) => {
     setSelectedGvrInfo(gvrInfo);
+    const group = gvrInfo.group === "" ? "core" : gvrInfo.group;
+    setNavItems([
+      { text: "Resources", href: "#" },
+      { text: group, href: `#${group}` },
+      { text: gvrInfo.version, href: `#${group}/${gvrInfo.version}` },
+      {
+        text: gvrInfo.resource,
+        href: `#${group}/${gvrInfo.version}/${gvrInfo.resource}`,
+      },
+    ] as BreadcrumbGroupProps.Item[]);
   };
 
   const headerText = ({ group, version, resource }: GVRInfo): string => {
@@ -131,143 +142,132 @@ export default function App() {
   return (
     <div>
       <AppLayout
+        breadcrumbs={<BreadcrumbGroup items={navItems} />}
         navigationOpen={true}
         navigation={
           <GvrNavigation handleGvrInfoOnFollow={handleGvrInfoOnFollow} />
         }
         contentType="table"
         content={
-          <>
-            <Table
-              header={
-                <Header
-                  counter={`${metaLabels.length}`}
-                  description="Label values"
-                  actions={
-                    selectedGvrInfo.namespaced ? (
-                      <Select
-                        selectedOption={selectedNamespaceOption}
-                        onChange={({
-                          detail,
-                        }: {
-                          detail: SelectProps.ChangeDetail;
-                        }) => {
-                          setSelectedNamespaceOption(detail.selectedOption);
-                        }}
-                        options={[defaultSelectedNamespace].concat(
-                          namespaces.map((namespace) => ({
-                            label: namespace,
-                            value: namespace,
-                          })),
-                        )}
-                        filteringType="auto"
-                      />
-                    ) : null
-                  }
-                >
-                  {headerText(selectedGvrInfo)}
-                </Header>
-              }
-              filter={
-                <TextFilter
-                  filteringText={keyword}
-                  filteringPlaceholder="Find by labels' key/value"
-                  onChange={({ detail }) => setKeyword(detail.filteringText)}
-                />
-              }
-              columnDisplay={[
-                { id: "name", visible: true },
-                { id: "namespace", visible: selectedGvrInfo.namespaced },
-                { id: "labels", visible: true },
-              ]}
-              columnDefinitions={[
-                {
-                  id: "name",
-                  header: "Name",
-                  cell: (item: MetaLabel) => item.name,
-                },
-                {
-                  id: "namespace",
-                  header: "Namespace",
-                  cell: (item: MetaLabel) => item.namespace,
-                },
-                {
-                  id: "labels",
-                  header: "Labels",
-                  cell: (item: MetaLabel) => (
-                    <ColumnLayout columns={100} borders="horizontal">
-                      <SpaceBetween direction="horizontal" size="xxs">
-                        {Object.entries(item.labels).map(([key, value]) => (
-                          <Hoverable
-                            key={`${item.namespace}/${item.name}-${key}`}
-                            keyName={key}
-                            hoverKey={hoverKey}
-                            handleMouseEnter={handleMouseEnter}
-                            handleMouseLeave={handleMouseLeave}
-                          >
-                            <Badge color={generateBadgeColor(key)}>
-                              <HighlightedText
-                                text={value}
-                                indices={item.valueHighlights[key] || []}
-                              />
-                            </Badge>
-                          </Hoverable>
-                        ))}
-                      </SpaceBetween>
-                    </ColumnLayout>
-                  ),
-                },
-              ]}
-              contentDensity="compact"
-              items={metaLabels}
-              loading={loading}
-              empty={<div>No labels found</div>}
-              wrapLines={true}
-            />
-          </>
+          <Table
+            header={
+              <Header
+                counter={`${metaLabels.length}`}
+                description="Label values"
+                actions={
+                  selectedGvrInfo.namespaced ? (
+                    <Select
+                      selectedOption={selectedNamespaceOption}
+                      onChange={({
+                        detail,
+                      }: {
+                        detail: SelectProps.ChangeDetail;
+                      }) => {
+                        setSelectedNamespaceOption(detail.selectedOption);
+                      }}
+                      options={[defaultSelectedNamespace].concat(
+                        namespaces.map((namespace) => ({
+                          label: namespace,
+                          value: namespace,
+                        })),
+                      )}
+                      filteringType="auto"
+                    />
+                  ) : null
+                }
+              >
+                {headerText(selectedGvrInfo)}
+              </Header>
+            }
+            filter={
+              <TextFilter
+                filteringText={keyword}
+                filteringPlaceholder="Find by labels' key/value"
+                onChange={({ detail }) => setKeyword(detail.filteringText)}
+              />
+            }
+            columnDisplay={[
+              { id: "name", visible: true },
+              { id: "namespace", visible: selectedGvrInfo.namespaced },
+              { id: "labels", visible: true },
+            ]}
+            columnDefinitions={[
+              {
+                id: "name",
+                header: "Name",
+                cell: (item: MetaLabel) => item.name,
+              },
+              {
+                id: "namespace",
+                header: "Namespace",
+                cell: (item: MetaLabel) => item.namespace,
+              },
+              {
+                id: "labels",
+                header: "Labels",
+                cell: (item: MetaLabel) => (
+                  <ColumnLayout columns={0} borders="horizontal">
+                    <SpaceBetween direction="horizontal" size="xxs">
+                      {Object.entries(item.labels).map(([key, value]) => (
+                        <Hoverable
+                          key={`${item.namespace}/${item.name}-${key}`}
+                          keyName={key}
+                          hoverKey={hoverKey}
+                          handleMouseEnter={handleMouseEnter}
+                          handleMouseLeave={handleMouseLeave}
+                        >
+                          <Badge color={generateBadgeColor(key)}>
+                            <HighlightedText
+                              text={value}
+                              indices={item.valueHighlights[key] || []}
+                            />
+                          </Badge>
+                        </Hoverable>
+                      ))}
+                    </SpaceBetween>
+                  </ColumnLayout>
+                ),
+              },
+            ]}
+            contentDensity="compact"
+            items={metaLabels}
+            loading={loading}
+            empty={<div>No labels found</div>}
+            wrapLines={true}
+          />
         }
         toolsOpen={true}
-        // TODO: find proper items iterable component than side nav
         tools={
           <ContentLayout
-            breadcrumbs="WORKINPROCESS"
             header={
               <SpaceBetween size="m">
                 <Header
                   variant="h3"
-                  info={<Link variant="info">Info</Link>}
                   description="All key matched by keyword to keys or values"
                 >
-                  Label Keys
+                  {`Label keys of ${selectedGvrInfo.resource}`}
                 </Header>
               </SpaceBetween>
             }
           >
-            <SideNavigation
-              header={{ text: "Labels keys", href: "#" }}
-              items={labelKeys.map((key) => ({
-                key: key,
-                type: "link",
-                text: "",
-                href: "#",
-                info: (
-                  <Hoverable
-                    key={key}
-                    keyName={key}
-                    hoverKey={hoverKey}
-                    handleMouseEnter={handleMouseEnter}
-                    handleMouseLeave={handleMouseLeave}
-                  >
-                    <Badge color={generateBadgeColor(key)}>
-                      <HighlightedText
-                        text={key}
-                        indices={keyHighlight[key] || []}
-                      />
-                    </Badge>
-                  </Hoverable>
-                ),
-              }))}
-            />
+            <SpaceBetween direction="vertical" size="s">
+              {labelKeys.map((key: string) => (
+                <Hoverable
+                  key={key}
+                  keyName={key}
+                  hoverKey={hoverKey}
+                  handleMouseEnter={handleMouseEnter}
+                  handleMouseLeave={handleMouseLeave}
+                >
+                  <Badge color={generateBadgeColor(key)}>
+                    <HighlightedText
+                      text={key}
+                      indices={keyHighlight[key] || []}
+                    />
+                  </Badge>
+                </Hoverable>
+              ))}
+            </SpaceBetween>
           </ContentLayout>
         }
       ></AppLayout>

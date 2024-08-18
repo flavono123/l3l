@@ -61,7 +61,6 @@ export default function GvrNavigation({
           ? detail.href.slice(1, -1)
           : detail.href.slice(1);
         const [group, version, resource] = groupVersionResource.split("/");
-        console.log({ group, version, resource, namespaced });
         handleGvrInfoOnFollow({ group, version, resource, namespaced });
       }}
     />

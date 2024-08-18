@@ -1,5 +1,8 @@
 import { type GVR, listGroupVersionResources } from "@/grpc/client";
-import { SideNavigation } from "@cloudscape-design/components";
+import {
+  SideNavigation,
+  type SideNavigationProps,
+} from "@cloudscape-design/components";
 import { useEffect, useState } from "react";
 import _ from "lodash";
 
@@ -47,7 +50,7 @@ export default function GvrNavigation({
           href: `#${gvr.group}/${gvr.version}/${gvr.resource}`,
         })),
       }))}
-      onFollow={({ detail }) => {
+      onFollow={({ detail }: { detail: SideNavigationProps.FollowDetail }) => {
         // HACK: parsing href is a hack itself
         if (detail.type !== "link") {
           return;

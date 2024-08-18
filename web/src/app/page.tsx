@@ -17,7 +17,7 @@ import {
   Header,
   Link,
   Select,
-  SelectProps,
+  type SelectProps,
   SideNavigation,
   SpaceBetween,
   Table,
@@ -144,7 +144,11 @@ export default function App() {
                   actions={
                     <Select
                       selectedOption={selectedNamespace}
-                      onChange={({ detail }) => {
+                      onChange={({
+                        detail,
+                      }: {
+                        detail: SelectProps.ChangeDetail;
+                      }) => {
                         setSelectedNamespace(detail.selectedOption);
                       }}
                       options={[defaultSelectedNamespace].concat(

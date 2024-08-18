@@ -174,6 +174,11 @@ export default function App() {
                   onChange={({ detail }) => setKeyword(detail.filteringText)}
                 />
               }
+              columnDisplay={[
+                { id: "name", visible: true },
+                { id: "namespace", visible: selectedGvrInfo.namespaced },
+                { id: "labels", visible: true },
+              ]}
               columnDefinitions={[
                 {
                   id: "name",

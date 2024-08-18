@@ -8,9 +8,10 @@ import {
   getClusterInfo,
 } from "@/grpc/client";
 import { SearchRequest } from "@/grpc/label_service_pb";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AppLayout,
+  type AppLayoutProps,
   Badge,
   BreadcrumbGroup,
   type BreadcrumbGroupProps,
@@ -53,6 +54,11 @@ export default function App() {
   const [selectedNamespaceOption, setSelectedNamespaceOption] =
     useState<SelectProps.Option>(defaultSelectedNamespace);
   const [navItems, setNavItems] = useState<BreadcrumbGroupProps.Item[]>([]);
+  const [navOpen, setNavOpen] = useState<boolean>(true);
+  const [toolsOpen, setToolsOpen] = useState<boolean>(true); // TODO: revert to true after focusing on search input
+
+  // ref
+  const appLayout = useRef<AppLayoutProps.Ref>(null);
 
   const debounceSetLoading = useCallback(
     _.debounce((loading: boolean) => {
@@ -81,7 +87,6 @@ export default function App() {
         const currentNamespace = namespaced
           ? (selectedNamespaceOption.value as string)
           : (defaultSelectedNamespace.value as string);
-        console.log(`request with ${currentNamespace}`);
         const result: MetaLabel[] = await searchLabels({
           group: group,
           version: version,
@@ -91,7 +96,12 @@ export default function App() {
         } as SearchRequest.AsObject);
         setMetaLabels(result);
         setLabelKeys(Object.keys(result[0]?.labels || {})); // HACK: these two are fetch from response's metadata should be added, not the first item
-        setKeyHighlight(result[0]?.keyHighlights || []); // all metaLabels have the same keyHighlights
+        const currentKeyHighlights = result[0]?.keyHighlights || [];
+        setKeyHighlight(currentKeyHighlights || []); // all metaLabels have the same keyHighlights
+        // if (appLayout.current && Object.keys(currentKeyHighlights).length > 0) {
+        //  appLayout.current.openTools();
+        //  TODO: focust to search input again
+        // }
       } catch (error) {
         console.error(error);
       }
@@ -142,8 +152,14 @@ export default function App() {
   return (
     <div>
       <AppLayout
+        ref={appLayout}
         breadcrumbs={<BreadcrumbGroup items={navItems} />}
-        navigationOpen={true}
+        onNavigationChange={({
+          detail,
+        }: {
+          detail: AppLayoutProps.ChangeDetail;
+        }) => setNavOpen(detail.open)}
+        navigationOpen={navOpen}
         navigation={
           <GvrNavigation handleGvrInfoOnFollow={handleGvrInfoOnFollow} />
         }
@@ -236,7 +252,10 @@ export default function App() {
             wrapLines={true}
           />
         }
-        toolsOpen={true}
+        onToolsChange={({ detail }: { detail: AppLayoutProps.ChangeDetail }) =>
+          setToolsOpen(detail.open)
+        }
+        toolsOpen={toolsOpen}
         tools={
           <ContentLayout
             header={

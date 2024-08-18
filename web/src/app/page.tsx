@@ -160,6 +160,7 @@ export default function App() {
                             value: namespace,
                           })),
                         )}
+                        filteringType="auto"
                       />
                     ) : null
                   }

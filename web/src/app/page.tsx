@@ -18,17 +18,21 @@ import {
   ColumnLayout,
   ContentLayout,
   Header,
+  Icon,
   Select,
   type SelectProps,
   SpaceBetween,
   Table,
   TextFilter,
+  Toggle,
+  TopNavigation,
 } from "@cloudscape-design/components";
 import { generateBadgeColor } from "../../utils/color";
 import Hoverable from "@/components/Hoverable";
 import HighlightedText from "@/components/HighlightedText";
 import _ from "lodash";
 import GvrNavigation from "@/components/GvrNavigation";
+import { applyMode, Mode } from "@cloudscape-design/global-styles";
 
 export default function App() {
   // state
@@ -56,6 +60,7 @@ export default function App() {
   const [navItems, setNavItems] = useState<BreadcrumbGroupProps.Item[]>([]);
   const [navOpen, setNavOpen] = useState<boolean>(true);
   const [toolsOpen, setToolsOpen] = useState<boolean>(true); // TODO: revert to true after focusing on search input
+  const [darkMode, setDarkMode] = useState<boolean>(true);
 
   // ref
   const appLayout = useRef<AppLayoutProps.Ref>(null);
@@ -151,6 +156,36 @@ export default function App() {
 
   return (
     <div>
+      <div id="h" style={{ position: "sticky", top: 0, zIndex: 1002 }}>
+        <TopNavigation
+          identity={{
+            href: "#",
+            title: "l3l",
+            logo: {
+              src: "/logo-small-top-navigation.svg",
+              alt: "Service",
+            },
+          }}
+          // HACK: https://github.com/cloudscape-design/components/discussions/1740#discussioncomment-7603732
+          search={
+            <SpaceBetween alignItems="end" size="l">
+              <Toggle
+                checked={darkMode}
+                onChange={() => {
+                  if (darkMode) {
+                    applyMode(Mode.Light);
+                  } else {
+                    applyMode(Mode.Dark);
+                  }
+                  setDarkMode(!darkMode);
+                }}
+              >
+                Dark
+              </Toggle>
+            </SpaceBetween>
+          }
+        />
+      </div>
       <AppLayout
         ref={appLayout}
         breadcrumbs={<BreadcrumbGroup items={navItems} />}

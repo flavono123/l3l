@@ -1,0 +1,9 @@
+@use "@cloudscape-design/design-tokens/index" as awsui;
+
+.top-navigation {
+  border-bottom: 1px solid awsui.$color-border-divider-default;
+  // HACK: https://cloudscape.design/components/top-navigation/?tabId=api#code-examples
+  position: sticky;
+  top: 0;
+  z-index: 1002;
+}

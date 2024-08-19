@@ -1,5 +1,7 @@
 "use client";
 
+import "./top-navigation.scss";
+
 import {
   type ClusterInfo,
   type GVRInfo,
@@ -18,7 +20,6 @@ import {
   ColumnLayout,
   ContentLayout,
   Header,
-  Icon,
   Select,
   type SelectProps,
   SpaceBetween,
@@ -156,7 +157,7 @@ export default function App() {
 
   return (
     <div>
-      <div id="h" style={{ position: "sticky", top: 0, zIndex: 1002 }}>
+      <div id="h" className="top-navigation">
         <TopNavigation
           identity={{
             href: "#",

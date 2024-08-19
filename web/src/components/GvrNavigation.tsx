@@ -16,6 +16,7 @@ export default function GvrNavigation({
   const [resourcesByGroupVersion, setResourcesByGroupVersion] = useState<{
     [key: string]: GVRInfo[];
   }>({});
+  const [activeHref, setActiveHref] = useState<string>("#");
 
   useEffect(() => {
     const fetchGVRs = async () => {
@@ -39,6 +40,7 @@ export default function GvrNavigation({
 
   return (
     <SideNavigation
+      activeHref={activeHref}
       header={{ text: "Resources", href: "#" }}
       items={Object.keys(resourcesByGroupVersion).map((groupVersion) => ({
         type: "expandable-link-group",
@@ -62,6 +64,7 @@ export default function GvrNavigation({
           : detail.href.slice(1);
         const [group, version, resource] = groupVersionResource.split("/");
         handleGvrInfoOnFollow({ group, version, resource, namespaced });
+        setActiveHref(detail.href);
       }}
     />
   );

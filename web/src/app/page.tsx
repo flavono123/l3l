@@ -76,6 +76,14 @@ export default function App() {
     [],
   );
 
+  const applyCurrentMode = useCallback((currentDarkMode: boolean) => {
+    if (currentDarkMode) {
+      applyMode(Mode.Dark);
+    } else {
+      applyMode(Mode.Light);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchNamespaces = async () => {
       try {
@@ -87,11 +95,7 @@ export default function App() {
     };
 
     fetchNamespaces();
-    if (darkMode) {
-      applyMode(Mode.Dark);
-    } else {
-      applyMode(Mode.Light);
-    }
+    applyCurrentMode(darkMode);
   }, []);
 
   useEffect(() => {
@@ -182,12 +186,8 @@ export default function App() {
               <Toggle
                 checked={darkMode}
                 onChange={() => {
-                  if (darkMode) {
-                    applyMode(Mode.Light);
-                  } else {
-                    applyMode(Mode.Dark);
-                  }
                   const invertedDarkMode = !darkMode;
+                  applyCurrentMode(invertedDarkMode);
                   setDarkMode(invertedDarkMode);
                   localStorage.setItem(
                     "darkMode",

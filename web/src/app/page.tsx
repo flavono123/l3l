@@ -61,7 +61,10 @@ export default function App() {
   const [navItems, setNavItems] = useState<BreadcrumbGroupProps.Item[]>([]);
   const [navOpen, setNavOpen] = useState<boolean>(true);
   const [toolsOpen, setToolsOpen] = useState<boolean>(true); // TODO: revert to true after focusing on search input
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const savedDarkMode = localStorage.getItem("darkMode");
+    return savedDarkMode ? JSON.parse(savedDarkMode) : true; // default true
+  });
 
   // ref
   const appLayout = useRef<AppLayoutProps.Ref>(null);
@@ -82,7 +85,13 @@ export default function App() {
         console.error(error);
       }
     };
+
     fetchNamespaces();
+    if (darkMode) {
+      applyMode(Mode.Dark);
+    } else {
+      applyMode(Mode.Light);
+    }
   }, []);
 
   useEffect(() => {
@@ -178,7 +187,12 @@ export default function App() {
                   } else {
                     applyMode(Mode.Dark);
                   }
-                  setDarkMode(!darkMode);
+                  const invertedDarkMode = !darkMode;
+                  setDarkMode(invertedDarkMode);
+                  localStorage.setItem(
+                    "darkMode",
+                    JSON.stringify(invertedDarkMode),
+                  );
                 }}
               >
                 Dark

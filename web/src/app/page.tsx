@@ -12,6 +12,7 @@ import {
 import { SearchRequest } from "@/grpc/label_service_pb";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Autosuggest,
   AppLayout,
   type AppLayoutProps,
   Badge,
@@ -24,7 +25,6 @@ import {
   type SelectProps,
   SpaceBetween,
   Table,
-  TextFilter,
   Toggle,
   TopNavigation,
 } from "@cloudscape-design/components";
@@ -39,6 +39,7 @@ export default function App() {
   // state
   const [metaLabels, setMetaLabels] = useState(Array<MetaLabel>());
   const [labelKeys, setLabelKeys] = useState<string[]>([]);
+  const [labelValues, setLabelValues] = useState<string[]>([]);
   const [hoverKey, setHoverKey] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [keyword, setKeyword] = useState<string>("");
@@ -115,6 +116,8 @@ export default function App() {
         } as SearchRequest.AsObject);
         setMetaLabels(result);
         setLabelKeys(Object.keys(result[0]?.labels || {})); // HACK: these two are fetch from response's metadata should be added, not the first item
+        // set unique label values
+        setLabelValues(result.flatMap((item) => Object.values(item.labels)));
         const currentKeyHighlights = result[0]?.keyHighlights || [];
         setKeyHighlight(currentKeyHighlights || []); // all metaLabels have the same keyHighlights
         // if (appLayout.current && Object.keys(currentKeyHighlights).length > 0) {
@@ -246,10 +249,29 @@ export default function App() {
               </Header>
             }
             filter={
-              <TextFilter
-                filteringText={keyword}
-                filteringPlaceholder="Find by labels' key/value"
-                onChange={({ detail }) => setKeyword(detail.filteringText)}
+              // XXX: this change makes distraction to "type" keyword i think
+              <Autosuggest
+                value={keyword}
+                filteringType="auto"
+                placeholder="Keyword"
+                onChange={({ detail }) => setKeyword(detail.value)}
+                options={[
+                  {
+                    label: "key",
+                    options: labelKeys.map((key) => ({
+                      iconName: "key",
+                      value: key,
+                      filteringTags: [...key.split("/"), ...key.split(".")],
+                    })),
+                  },
+                  {
+                    label: "value",
+                    options: Array.from(new Set(labelValues)).map((value) => ({
+                      iconName: "suggestions",
+                      value: value,
+                    })),
+                  },
+                ]}
               />
             }
             columnDisplay={[

@@ -1,0 +1,7 @@
+@use "@cloudscape-design/design-tokens/index" as awsui;
+
+.filter-match {
+  background-color: awsui.$color-background-dropdown-item-filter-match;
+  color: awsui.$color-text-dropdown-item-filter-match;
+  font-weight: bold;
+}

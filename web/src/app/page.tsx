@@ -13,6 +13,7 @@ import { SearchRequest } from "@/grpc/label_service_pb";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Autosuggest,
+  type AutosuggestProps,
   AppLayout,
   type AppLayoutProps,
   Badge,
@@ -84,6 +85,38 @@ export default function App() {
       applyMode(Mode.Light);
     }
   }, []);
+
+  const keywordSuggestions = useCallback((): AutosuggestProps.Options => {
+    const result = [
+      {
+        iconName: "keyboard",
+        label: `Enter to filter ${keyword}`,
+        value: keyword,
+      },
+    ];
+    if (labelKeys.length > 0) {
+      result.push({
+        label: "key",
+        options: labelKeys.map((key) => ({
+          iconName: "key",
+          value: key,
+          filteringTags: [...key.split("/"), ...key.split(".")],
+        })),
+      });
+    }
+
+    if (labelValues.length > 0) {
+      result.push({
+        label: "value",
+        options: Array.from(new Set(labelValues)).map((value) => ({
+          iconName: "suggestions",
+          value: value,
+        })),
+      });
+    }
+
+    return result as AutosuggestProps.Options;
+  }, [keyword, labelKeys, labelValues]);
 
   useEffect(() => {
     const fetchNamespaces = async () => {
@@ -255,23 +288,7 @@ export default function App() {
                 filteringType="auto"
                 placeholder="Keyword"
                 onChange={({ detail }) => setKeyword(detail.value)}
-                options={[
-                  {
-                    label: "key",
-                    options: labelKeys.map((key) => ({
-                      iconName: "key",
-                      value: key,
-                      filteringTags: [...key.split("/"), ...key.split(".")],
-                    })),
-                  },
-                  {
-                    label: "value",
-                    options: Array.from(new Set(labelValues)).map((value) => ({
-                      iconName: "suggestions",
-                      value: value,
-                    })),
-                  },
-                ]}
+                options={keywordSuggestions()}
               />
             }
             columnDisplay={[

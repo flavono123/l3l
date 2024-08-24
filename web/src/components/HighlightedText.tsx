@@ -1,3 +1,5 @@
+import "./HighlightedText.scss";
+
 import { Fragment } from "react";
 
 interface HighlightedTextProps {
@@ -22,13 +24,7 @@ export default function HighlightedText({
         return (
           <Fragment key={`fragment-${i}`}>
             <span key={`text-${i}-${start}`}>{text.slice(start, end)}</span>
-            <span
-              key={`highlight-${i}-${end}`}
-              style={{
-                backgroundColor: "yellow",
-                color: "black",
-              }}
-            >
+            <span key={`highlight-${i}-${end}`} className="filter-match">
               {text[end]}
             </span>
           </Fragment>

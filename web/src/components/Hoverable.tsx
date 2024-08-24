@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { cloneElement, ReactNode } from "react";
 import "./Hoverable.css";
 
 interface HoverableProps {
@@ -25,7 +25,9 @@ export default function Hoverable({
         onMouseLeave={() => handleMouseLeave()}
         data-hover={isFocused ? "true" : "false"}
       >
-        {children}
+        {cloneElement(children, {
+          variant: hoverKey === keyName ? "primary" : "normal",
+        })}
       </div>
     </>
   );

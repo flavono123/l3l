@@ -28,6 +28,8 @@ import {
   Table,
   Toggle,
   TopNavigation,
+  HelpPanel,
+  Icon,
 } from "@cloudscape-design/components";
 import { generateBadgeColor } from "../../utils/color";
 import Hoverable from "@/components/Hoverable";
@@ -35,6 +37,7 @@ import HighlightedText from "@/components/HighlightedText";
 import _ from "lodash";
 import GvrNavigation from "@/components/GvrNavigation";
 import { applyMode, Mode } from "@cloudscape-design/global-styles";
+import { FaMoon } from "react-icons/fa";
 
 export default function App() {
   // state
@@ -231,7 +234,7 @@ export default function App() {
                   );
                 }}
               >
-                Dark
+                <FaMoon />
               </Toggle>
             </SpaceBetween>
           }
@@ -346,16 +349,19 @@ export default function App() {
         }
         toolsOpen={toolsOpen}
         tools={
-          <ContentLayout
+          <HelpPanel
             header={
-              <SpaceBetween size="m">
-                <Header
-                  variant="h3"
-                  description="All key matched by keyword to keys or values"
-                >
-                  {`Label keys of ${selectedGvrInfo.resource}`}
-                </Header>
-              </SpaceBetween>
+              <Header variant="h3" counter={`${labelKeys.length}`}>
+                Keys
+              </Header>
+            }
+            footer={
+              keyword ? (
+                <p>
+                  Some keys are not highlighted since they are filtered by their
+                  values.
+                </p>
+              ) : null
             }
           >
             <SpaceBetween direction="vertical" size="s">
@@ -376,7 +382,7 @@ export default function App() {
                 </Hoverable>
               ))}
             </SpaceBetween>
-          </ContentLayout>
+          </HelpPanel>
         }
       ></AppLayout>
     </div>
